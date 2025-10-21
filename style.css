@@ -3,13 +3,19 @@
 	padding: 0;
 	width: 100%;
 	height: 100%;
-	overflow: hidden; /* prevent scrollbar */
+	overflow: hidden; /* no scrollbar */
 }
 
-/*
-#canvas {
-	display: block;
-	width: 100%;
-	height: 100%;
+#inputsTable {
+	position: absolute;
+	top: 0;
+	right: 0;
 }
-*/
+
+#canvas {
+	background: #F3F1E9;
+}
+
+.hidden {
+	display: none;
+}

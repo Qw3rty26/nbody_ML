@@ -8,11 +8,38 @@
 <style src="./style.css"></style>
 
 <body id="body">
+	<table id="inputsTable">
+		<tr>
+			<th>Time (s)</th>
+			<th><input type="range" min="0" max="5" step="0.01" class="slider" value="1" id="timeSlider"/></th>
+			<th><input type="number" min="0" max="5" step="0.01" value="1" id="timeSelector"/></th>
+		</tr>
+		<tr id="timeStep" class="hidden">
+			<th>Step by (s)</th>
+			<th><input type="number" min="0" max="5" step="0.01" value="1" id="stepTimeSelector"/></th>
+			<th><button type="button" id="stepTimeButton">GO</button></th>
+		</tr>
+		<tr>
+                        <th>Mass</th>
+                        <th></th>
+                        <th><input type="checkbox" id="massCheckbox"/></th>
+                </tr>
+		<tr>
+			<th>Velocity vectors</th>
+			<th></th>
+			<th><input type="checkbox" id="velocityCheckbox"/></th>
+		</tr>
+		<tr>
+			<th>Acceleration vectors</th>
+			<th></th>
+			<th><input type="checkbox" id="accelerationCheckbox"/></th>
+		</tr>
+	</table>
 	<canvas id="canvas"></canvas>
 </body>
 <script src="./system.js"></script>
 <script src="./entity.js"></script>
+<script src="./inputsTable.js"></script>
 <script src="./script.js"></script>
-
 <!-- CODE MADE BY: Qw3rty26 -->
 </html>

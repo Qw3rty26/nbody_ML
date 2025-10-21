@@ -22,8 +22,8 @@ class entity{
 		this.xPos = this.xPos + (this.xVel * time);
 		this.yPos = this.yPos + (this.yVel * time);
 
-		this.xVel = this.xVel + (this.xAcc * time * 0.01);
-		this.yVel = this.yVel + (this.yAcc * time * 0.01);
+		this.xVel = this.xVel + (this.xAcc * time);
+		this.yVel = this.yVel + (this.yAcc * time);
 	}
 
 	getXPos(){

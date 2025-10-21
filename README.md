@@ -5,5 +5,13 @@ todo list
 
 - implement friction
 - implement textures
-- implement scroll bars for variables
 - make code lighter
+- implement zoom
+- implement showing velocity and acceleration vectors;
+
+
+sources:
+
+https://en.wikipedia.org/wiki/N-body_problem
+https://scholarlypublications.universiteitleiden.nl/access/item%3A4262590/view
+https://mediatum.ub.tum.de/doc/1764550/8etrnidcyv7ngein4k7n42yng.pdf
