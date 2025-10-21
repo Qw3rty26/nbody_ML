@@ -33,4 +33,6 @@ function draw () {
 	setTimeout(draw, 1000 / fps); /* limit the fps */
 }
 
-draw();
+document.addEventListener("DOMContentLoaded", () =>{
+	draw();
+})

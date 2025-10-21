@@ -1,5 +1,5 @@
 class system{
-	constructor(numEntities, maxX, maxY){
+	constructor(numEntities = 0, maxX, maxY, velocityCheck = false, accelerationCheck = false){
 		this.maxX = maxX;
 		this.maxY = maxY;
 		this.#initiateSystem(numEntities);
@@ -22,7 +22,21 @@ class system{
 	render(ctx){
 		for(let i = 0; i!=this.numEntities; i++){
 			this.entity[i].render(ctx);
+			if(this.velocityCheck){
+				this.entity[i].renderVelocityVector(ctx);
+			}
+			if(this.accelerationCheck){
+				this.entity[i].renderAccelerationVector(ctx);
+			}
 		}
+	}
+
+	toggleVelocityVectors(bool){
+		this.velocityCheck = bool;
+	}
+
+	toggleAccelerationVectors(bool){
+		this.accelerationCheck = bool;
 	}
 
 	update(time){

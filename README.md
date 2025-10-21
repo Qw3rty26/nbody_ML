@@ -7,7 +7,6 @@ todo list
 - implement textures
 - make code lighter
 - implement zoom
-- implement showing velocity and acceleration vectors;
 
 
 sources:

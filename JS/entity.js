@@ -14,9 +14,28 @@ class entity{
         	ctx.beginPath();
         	ctx.arc(this.xPos, this.yPos, this.radius, 0, 2 * Math.PI);
         	ctx.fillStyle = "black";
-        	ctx.fill();
+        	ctx.strokeStyle = "black";
+		ctx.fill();
         	ctx.stroke();
 	};
+
+	renderVelocityVector(ctx) {
+		ctx.beginPath();
+		ctx.moveTo(this.xPos, this.yPos);
+		ctx.lineTo(this.xPos + this.xVel * 2, this.yPos + this.yVel * 2);
+		ctx.strokeStyle = "red";
+		ctx.lineWidth = 2;
+		ctx.stroke();
+	}
+
+	renderAccelerationVector(ctx) {
+		ctx.beginPath();
+                ctx.moveTo(this.xPos, this.yPos);
+                ctx.lineTo(this.xPos + this.xAcc * 50, this.yPos + this.yAcc * 50);
+                ctx.strokeStyle = "green";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+	}
 
 	update(time){
 		this.xPos = this.xPos + (this.xVel * time);
