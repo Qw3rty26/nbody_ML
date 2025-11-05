@@ -3,13 +3,15 @@
 const velocityCheckbox = document.getElementById("velocityCheckbox");
 
 function setVelocityVectors (bool) {
-	entitySystem.toggleVelocityVectors(bool);
+	entitySystem.setVelocityVectors(bool);
 }
 
 velocityCheckbox.addEventListener("change", () => {
 	setVelocityVectors(velocityCheckbox.checked);
 });
 
+
+// initiate velocity vectors
 document.addEventListener("DOMContentLoaded", () =>{
 	setVelocityVectors(velocityCheckbox.checked);
 })
@@ -22,13 +24,15 @@ document.addEventListener("DOMContentLoaded", () =>{
 const accelerationCheckbox = document.getElementById("accelerationCheckbox");
 
 function setAccelerationVectors (bool) {
-	entitySystem.toggleAccelerationVectors(bool);
+	entitySystem.setAccelerationVectors(bool);
 }
 
 accelerationCheckbox.addEventListener("change", () => {
 	setAccelerationVectors(accelerationCheckbox.checked);
 });
 
+
+// initiate acceleration vectors
 document.addEventListener("DOMContentLoaded", () =>{
 	setAccelerationVectors(accelerationCheckbox.checked);
 })

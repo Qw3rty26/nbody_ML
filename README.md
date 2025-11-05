@@ -1,5 +1,5 @@
 # nbody_ML
-Solving the n-body problem with ML
+Simulating the n-body problem with ML
 
 Made by Qw3rty26
 

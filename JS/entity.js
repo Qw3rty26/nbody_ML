@@ -1,82 +1,121 @@
 class entity{	
-	constructor(xPos = 10, yPos = 10, xVel = 0, yVel = 0, xAcc = 0, yAcc = 0, mass = 10){
+	constructor(xPos = 10.0, yPos = 10.0, xVel = 0.0, yVel = 0.0, xAcc = 0.0, yAcc = 0.0, typeOfAcc = "constructor", mass = 10.0){
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.xVel = xVel;
 		this.yVel = yVel;
-		this.xAcc = xAcc;
-		this.yAcc = yAcc;
+		this.Acc = new accelerations(xAcc, yAcc, typeOfAcc);
 		this.mass = mass;
-		this.radius = mass;
+		this.radius = 10.0 * mass;
 	}
 
-	render(ctx) {
-        	ctx.beginPath();
-        	ctx.arc(this.xPos, this.yPos, this.radius, 0, 2 * Math.PI);
-        	ctx.fillStyle = "black";
+	render(ctx, space) {
+        	//TODO make it so that whenever the entity is outside the screen, it wont get rendered
+		const {x, y} = space.toScreen(this.xPos, this.yPos);
+		const radius = this.radius * space.scale;
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, 2 * Math.PI); // draw circonference;
+		ctx.fillStyle = "black";
         	ctx.strokeStyle = "black";
 		ctx.fill();
         	ctx.stroke();
 	};
 
-	renderVelocityVector(ctx) {
+	renderVelocityVector(ctx, space) {
+		const {x, y} = space.toScreen(this.xPos, this.yPos);
 		ctx.beginPath();
-		ctx.moveTo(this.xPos, this.yPos);
-		ctx.lineTo(this.xPos + this.xVel * 2, this.yPos + this.yVel * 2);
+		ctx.moveTo(x, y);
+		ctx.lineTo(x + this.xVel * space.scale * 2, y + this.yVel * space.scale * 2);
 		ctx.strokeStyle = "red";
 		ctx.lineWidth = 2;
 		ctx.stroke();
 	}
 
-	renderAccelerationVector(ctx) {
-		ctx.beginPath();
-                ctx.moveTo(this.xPos, this.yPos);
-                ctx.lineTo(this.xPos + this.xAcc * 50, this.yPos + this.yAcc * 50);
-                ctx.strokeStyle = "green";
-                ctx.lineWidth = 2;
-                ctx.stroke();
+	renderAccelerationVector(ctx, space) {
+		const {x, y} = space.toScreen(this.xPos, this.yPos);
+		for(let acc of this.Acc.getAccelerations()){
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+			ctx.lineTo(x + acc.x * space.scale * 2, y + acc.y * space.scale * 2);
+			ctx.strokeStyle = "green";
+			ctx.lineWidth = 2;
+			ctx.stroke();
+
+			ctx.fillStyle = "green";
+        		ctx.font = "10px Arial";
+        		ctx.fillText(acc.type, x + acc.x * space.scale * 2, y + acc.y * space.scale * 2);
+		}
 	}
 
-	update(time){
-		this.xPos = this.xPos + (this.xVel * time);
-		this.yPos = this.yPos + (this.yVel * time);
+	update(dt = 0){
+		let totalAcc = this.Acc.getAcceleration("total");	
+		this.xPos = this.xPos + (this.xVel * dt) + 0.5 * totalAcc.x * dt * dt;
+		this.yPos = this.yPos + (this.yVel * dt) + 0.5 * totalAcc.y * dt * dt;
+		
 
-		this.xVel = this.xVel + (this.xAcc * time);
-		this.yVel = this.yVel + (this.yAcc * time);
+		this.xVel = this.xVel + (totalAcc.x * dt);
+		this.yVel = this.yVel + (totalAcc.y * dt);
+		//console.log("xAcc: " + totalAcc.x + " yAcc: " + totalAcc.y);
+		//console.log("xVel: " + this.xVel + " yVel: " + this.yVel);
+	
 	}
 
-	getXPos(){
-		return this.xPos;
+	getXPos(timeStep = 0){
+		let xPos = this.xPos + (this.xVel * timeStep);
+		return xPos;
 	}
 
 	setXPos(x){
 		this.xPos = x;
 	}
-
-	getYPos(){
-		return this.yPos;
-	}
-
-	setYPos(y){
-		this.yPos = y;
-	}
+	
+	getYPos(dt = 0){
+		if(dt <= 0){
+			return this.yPos;
+		}
+		let totalAcc = this.Acc.getAcceleration("total");
+		let yPos = this.yPos + (this.yVel * dt) + 0.5 * totalAcc.y * dt * dt;
+                return yPos;
+        }
 
 	getRadius(){
 		return this.radius;
 	}
 
+	getXVel(){
+		return this.xVel;
+	}
+
+	getYVel(){
+		return this.yVel;
+	}
+
+	getXAcc(){
+		let totalAcc = this.Acc.getAcceleration("total");
+                return totalAcc.x;
+        }
+
+	getYAcc(type = "default"){
+		let totalAcc = this.Acc.getAcceleration("total");
+                return totalAcc.y;
+	}
+
 	hitX(){
-		this.xVel *= -0.7;
-		if(Math.abs(this.xVel) < 0.4){
-			this.xVel = 0;
-		}
+		// apply acceleration given by the normal force coming from the floor
+		//this.xAcc.push(0);
+		//this.yAcc.push(0);
+		//this.hit = true;
 	}
 
 	hitY(){
-		this.yVel *= -0.7;
-		if(Math.abs(this.yVel) < 0.4){
-			this.yVel = 0;
-		}
+		let elasticity = 0.7;
+		// apply acceleration given by the normal force coming from the floor
+		this.yVel = this.yVel * -1 * elasticity;
+		this.Acc.newAcceleration(0, -9.8, "normal");
+	}
+
+	removeAcc(type){
+		this.Acc.deleteAcceleration(type);
 	}
 
 }

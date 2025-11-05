@@ -13,7 +13,16 @@
 }
 
 #canvas {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+#gridCanvas {
 	background: #F3F1E9;
+	position: absolute;
+	top: 0px;
+	left: 0px;
 }
 
 .hidden {
