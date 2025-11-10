@@ -15,9 +15,6 @@ const gridCanvas = document.getElementById("gridCanvas");
 const gridCtx = gridCanvas.getContext("2d");
 
 
-
-const fps = 10;
-
 // set canvas resolution 
 const dpr = window.devicePixelRatio || 1; // get device pixel ratio
 function setCanvasSize(canvas, winWidth, winHeight){
@@ -38,6 +35,7 @@ let initialMouseY = 0;
 let isDragging = false;
 
 systemCanvas.addEventListener("mousedown", (event)=>{ // used to drag the space
+	//TODO Implement camera following an entity
 	event.preventDefault(); // remove default handlers
 	isDragging = true;
 	initialMouseX = event.clientX - rect.left;

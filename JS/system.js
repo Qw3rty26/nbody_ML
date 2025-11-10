@@ -1,8 +1,7 @@
 class system{
-	constructor(numEntities=0, maxX=0, maxY=0, velocityCheck=false, accelerationCheck=false){
+	constructor(numEntities=0, maxX=0, maxY=0){
 		this.space = new space(0, 0, maxX, maxY, 100);
-		this.velocityCheck = velocityCheck;
-		this.accelerationCheck = accelerationCheck;
+		this.properties = new properties();
 		this.#initiateSystem(numEntities);
 	}
 
@@ -32,22 +31,8 @@ class system{
 		ctx.clearRect(0, 0, this.space.screenWidth, this.space.screenHeight); // clear the screen
 		for(let i = 0; i != this.numEntities; i++){ // cycle through all the entities
 			this.entity[i].render(ctx, this.space);
-			//if(this.trailCheck){ // render trails
-			if(this.velocityCheck){ // render velocity vectors 
-				this.entity[i].renderVelocityVector(ctx, this.space);
-			}
-			if(this.accelerationCheck){ // render acceleration vectors
-				this.entity[i].renderAccelerationVector(ctx, this.space);
-			}
+			this.properties.renderProperties(ctx, this.entity[i], this.space);
 		}
-	}
-
-	setVelocityVectors(bool){ // show/hide velocity vectors
-		this.velocityCheck = bool;
-	}
-
-	setAccelerationVectors(bool){ // show/hide acceleration vectors
-		this.accelerationCheck = bool;
 	}
 
 	#checkCollisions(timeStep = 0, index = 0, recursive = false){

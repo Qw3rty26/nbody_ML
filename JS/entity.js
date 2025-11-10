@@ -78,18 +78,6 @@ class entity{
                 return yPos;
         }
 
-	getRadius(){
-		return this.radius;
-	}
-
-	getXVel(){
-		return this.xVel;
-	}
-
-	getYVel(){
-		return this.yVel;
-	}
-
 	getXAcc(){
 		let totalAcc = this.Acc.getAcceleration("total");
                 return totalAcc.x;
@@ -98,13 +86,6 @@ class entity{
 	getYAcc(type = "default"){
 		let totalAcc = this.Acc.getAcceleration("total");
                 return totalAcc.y;
-	}
-
-	hitX(){
-		// apply acceleration given by the normal force coming from the floor
-		//this.xAcc.push(0);
-		//this.yAcc.push(0);
-		//this.hit = true;
 	}
 
 	hitY(){

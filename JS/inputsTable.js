@@ -3,7 +3,7 @@
 const velocityCheckbox = document.getElementById("velocityCheckbox");
 
 function setVelocityVectors (bool) {
-	entitySystem.setVelocityVectors(bool);
+	entitySystem.properties.velVector = bool;
 }
 
 velocityCheckbox.addEventListener("change", () => {
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () =>{
 const accelerationCheckbox = document.getElementById("accelerationCheckbox");
 
 function setAccelerationVectors (bool) {
-	entitySystem.setAccelerationVectors(bool);
+	entitySystem.properties.accVector = bool;
 }
 
 accelerationCheckbox.addEventListener("change", () => {
@@ -78,4 +78,34 @@ stepTimeButton.onclick = function () {
 // initiate time
 document.addEventListener("DOMContentLoaded", () =>{
 	setTime(timeSlider.value);
+})
+
+
+
+
+// FPS SLIDER
+
+const fpsSlider = document.getElementById("fpsSlider");
+const fpsSelector = document.getElementById("fpsSelector");
+
+let fps = 60; // default value
+
+fpsSlider.oninput = function () {
+        fpsSelector.value = this.value;
+        setFPS(this.value);
+}
+
+fpsSelector.oninput = function () {
+        fpsSlider.value = this.value;
+        setFPS(this.value);
+}
+
+
+function setFPS (value) {
+        fps = value;
+}
+
+// initiate time
+document.addEventListener("DOMContentLoaded", () =>{
+        setFPS(fpsSlider.value);
 })
