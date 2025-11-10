@@ -28,7 +28,11 @@ function setCanvasSize(canvas, winWidth, winHeight){
 setCanvasSize(systemCanvas, winWidth, winHeight);
 setCanvasSize(gridCanvas, winWidth, winHeight);
 
-let entitySystem = new system(1, winWidth, winHeight);
+let entitySystem = new system(0, winWidth, winHeight);
+
+
+entitySystem.addEntity(900, 900, 0, 0, 300);
+entitySystem.addEntity(1500, 900, -10, 20, 50);
 
 let initialMouseX = 0;
 let initialMouseY = 0;

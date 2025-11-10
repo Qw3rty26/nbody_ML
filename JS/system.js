@@ -3,10 +3,11 @@ class system{
 		this.space = new space(0, 0, maxX, maxY, 100);
 		this.properties = new properties();
 		this.#initiateSystem(numEntities);
+		this.gravity = new gravity();
 	}
 
-	addEntity(x=0, y=0, xVel=0, yVel=0, xAcc=0, yAcc=0, typeAcc="default", mass=0){
-                this.entity[this.numEntities] = new entity(x + this.space.originX, y + this.space.originY, xVel, yVel, xAcc, yAcc, typeAcc, mass);
+	addEntity(x=0, y=0, xVel=0, yVel=0,  mass=0){
+		this.entity[this.numEntities] = new entity(x, y, xVel, yVel, mass);
                 this.numEntities++;
         }
 
@@ -23,7 +24,7 @@ class system{
 		this.numEntities = 0;
 		this.entity = [];
 		for(let i = 0; i != num; i++){
-			this.addEntity(Math.random() * this.space.screenWidth, Math.random() * this.space.screenHeight, 0.0, 0.0, 0.0, 9.8, "gravity", Math.random() * 10.0);
+			this.addEntity(Math.random() * this.space.screenWidth, Math.random() * this.space.screenHeight, 0, 0, Math.random() * 100);
 		}
 	}
 
@@ -110,6 +111,7 @@ class system{
 		if(timeStep <= 0){
 			return;
 		}
+		this.gravity.naiveCalculate(this.numEntities, this.entity);
 		for(let i = 0; i != this.numEntities; i++){
 			let entityTimeStep = timeStep;
 			entityTimeStep = this.#checkCollisions(entityTimeStep, i, false);

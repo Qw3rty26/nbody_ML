@@ -1,25 +1,23 @@
 class accelerations{
 	constructor(x = 0.0, y = 0.0, type = "default"){
 		this.accelerations = [];
-		this.newAcceleration(x, y, type);
 	}
 
 	newAcceleration(x, y, type) {
     		// check if type already exists
-    		if (!this.accelerations.some(acc => acc.type === type)) {
-        		//console.log("added " + type);
-			this.accelerations.push({ x: x, y: y, type: type });
-    		}
+    		const existing = this.accelerations.find(acc => acc.type === type);
+		if (existing) {
+    			existing.x += x;
+			existing.y += y;
+		}else{
+			this.accelerations.push({x, y, type});
+		}
     		return;
 	}
 
 	deleteAcceleration(type){
 		this.accelerations = this.accelerations.filter(acc => acc.type !== type);
 		return;
-	}
-
-	getAccelerations(){
-		return this.accelerations;
 	}
 
 	getAcceleration(type = "default") {

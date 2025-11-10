@@ -1,12 +1,12 @@
 class entity{	
-	constructor(xPos = 10.0, yPos = 10.0, xVel = 0.0, yVel = 0.0, xAcc = 0.0, yAcc = 0.0, typeOfAcc = "constructor", mass = 10.0){
+	constructor(xPos = 10.0, yPos = 10.0, xVel = 0.0, yVel = 0.0, mass = 10.0){
 		this.xPos = xPos;
 		this.yPos = yPos;
 		this.xVel = xVel;
 		this.yVel = yVel;
-		this.Acc = new accelerations(xAcc, yAcc, typeOfAcc);
-		this.mass = mass;
-		this.radius = 10.0 * mass;
+		this.Acc = new accelerations();
+		this.mass = mass * 1e13;
+		this.radius = this.mass * 1e-13 ;
 	}
 
 	render(ctx, space) {
@@ -33,10 +33,10 @@ class entity{
 
 	renderAccelerationVector(ctx, space) {
 		const {x, y} = space.toScreen(this.xPos, this.yPos);
-		for(let acc of this.Acc.getAccelerations()){
+		for(let acc of this.Acc.accelerations){
 			ctx.beginPath();
 			ctx.moveTo(x, y);
-			ctx.lineTo(x + acc.x * space.scale * 2, y + acc.y * space.scale * 2);
+			ctx.lineTo(x + acc.x * space.scale * 10, y + acc.y * space.scale * 10);
 			ctx.strokeStyle = "green";
 			ctx.lineWidth = 2;
 			ctx.stroke();
@@ -65,10 +65,6 @@ class entity{
 		return xPos;
 	}
 
-	setXPos(x){
-		this.xPos = x;
-	}
-	
 	getYPos(dt = 0){
 		if(dt <= 0){
 			return this.yPos;
@@ -93,10 +89,6 @@ class entity{
 		// apply acceleration given by the normal force coming from the floor
 		this.yVel = this.yVel * -1 * elasticity;
 		this.Acc.newAcceleration(0, -9.8, "normal");
-	}
-
-	removeAcc(type){
-		this.Acc.deleteAcceleration(type);
 	}
 
 }
