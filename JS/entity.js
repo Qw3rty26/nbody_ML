@@ -25,7 +25,7 @@ class entity{
 		const {x, y} = space.toScreen(this.xPos, this.yPos);
 		ctx.beginPath();
 		ctx.moveTo(x, y);
-		ctx.lineTo(x + this.xVel * space.scale * 2, y + this.yVel * space.scale * 2);
+		ctx.lineTo(x + this.xVel * space.scale * 10, y + this.yVel * space.scale * 10);
 		ctx.strokeStyle = "red";
 		ctx.lineWidth = 2;
 		ctx.stroke();
@@ -36,7 +36,7 @@ class entity{
 		for(let acc of this.Acc.accelerations){
 			ctx.beginPath();
 			ctx.moveTo(x, y);
-			ctx.lineTo(x + acc.x * space.scale * 10, y + acc.y * space.scale * 10);
+			ctx.lineTo(x + acc.x * space.scale * 200, y + acc.y * space.scale * 200);
 			ctx.strokeStyle = "green";
 			ctx.lineWidth = 2;
 			ctx.stroke();

@@ -21,6 +21,10 @@ class gravity{
 
 		for(let i=0; i<numEntities; i++){
 			for(let j=i+1; j<numEntities; j++){
+				
+				// gravity_force = G * (m_1 * m_2) / r^2
+				// acceleration = F / m
+
 				const dx = entityArray[j].xPos - entityArray[i].xPos;
 				const dy = entityArray[j].yPos - entityArray[i].yPos;
 				const r = Math.sqrt(dx*dx + dy*dy + 1);

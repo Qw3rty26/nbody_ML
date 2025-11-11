@@ -50,20 +50,6 @@ class system{
 		// 	hitCheck = true;
 		// }
 
-		// hit the left wall
-		// if(){
-		// 	hitCheck = true;
-		// }
-
-		// hit the right wall
-		// if(){
-		//	hitCheck = true;
-		// }
-
-		// hit the ceiling
-		// if(){
-		// 	hitCheck = true;
-		// }
 /*
 		// hit the floor
 		if(this.entity[index].getRadius() + this.entity[index].getYPos(timeStep) >= this.maxY){
