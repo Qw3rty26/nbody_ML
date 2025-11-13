@@ -5,6 +5,7 @@ import dispatcher
 PORT = 8000
 
 routes = {
+    #GET
     "/": lambda: dispatcher.html("index.html"), # Use lambda to read file on-demand so changes update without restarting server
     "/CSS/style.css": lambda: dispatcher.css("style.css"),
     "/JS/properties.js": lambda: dispatcher.js("properties.js"),
@@ -14,7 +15,14 @@ routes = {
     "/JS/entity.js": lambda: dispatcher.js("entity.js"),
     "/JS/system.js": lambda: dispatcher.js("system.js"),
     "/JS/inputsTable.js": lambda: dispatcher.js("inputsTable.js"),
-    "/JS/script.js": lambda: dispatcher.js("script.js")
+    "/JS/script.js": lambda: dispatcher.js("script.js"),
+    "/simulation/render": lambda: dispatcher.render(),
+    "/simulation/clear": lambda: dispatcher.clear(),
+    #GET
+    #POST
+    "/simulation/update": lambda data: dispatcher.update(data),
+    "/simulation/add_entity": lambda data: dispatcher.addEntity(data)
+    #POST
 }
 
 class catcher(BaseHTTPRequestHandler):
@@ -32,25 +40,26 @@ class catcher(BaseHTTPRequestHandler):
             result, content_type = routes[self.path]()
             self._set_headers(content_type)
             if isinstance(result, dict):
-                self.wfile.write(json.dumps(result).encode())
+                self.wfile.write(json.dumps(result).encode()) #if response contains JSON
             else:
-                self.wfile.write(result.encode())
+                self.wfile.write(result.encode()) #if response contains html/css/js
         else:
             self.send_response(404)
             self.end_headers()
             self.wfile.write("Not found".encode())
 
     def do_POST(self):
-        if self.path == "/simulate":
-            content_length = int(self.headers['Content-Length'])
-            body = self.rfile.read(content_length)
-            data = json.loads(body)
-            
-            print("Received data:", data)
-            result = {"status": "ok", "result": f"Processed {len(data)} values"}
-
-            self._set_headers()
+        if self.path in routes:
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8")
+            data = json.loads(body) if body else None
+            result, content_type = routes[self.path](data)
+            self._set_headers(content_type)
             self.wfile.write(json.dumps(result).encode())
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write("Not found.".encode())
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -60,6 +69,6 @@ class catcher(BaseHTTPRequestHandler):
         self.end_headers()
 
 server = HTTPServer(('127.0.0.1', PORT), catcher)
-print(f"Server started.")
+print(f"Server started on 127.0.0.1:8000 .")
 server.serve_forever()
 

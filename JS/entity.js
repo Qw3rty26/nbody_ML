@@ -1,4 +1,4 @@
-class entity{	
+class Entity{	
 	constructor(xPos = 10.0, yPos = 10.0, xVel = 0.0, yVel = 0.0, mass = 10.0){
 		this.xPos = xPos;
 		this.yPos = yPos;
@@ -45,50 +45,6 @@ class entity{
         		ctx.font = "10px Arial";
         		ctx.fillText(acc.type, x + acc.x * space.scale * 2, y + acc.y * space.scale * 2);
 		}
-	}
-
-	update(dt = 0){
-		let totalAcc = this.Acc.getAcceleration("total");	
-		this.xPos = this.xPos + (this.xVel * dt) + 0.5 * totalAcc.x * dt * dt;
-		this.yPos = this.yPos + (this.yVel * dt) + 0.5 * totalAcc.y * dt * dt;
-		
-
-		this.xVel = this.xVel + (totalAcc.x * dt);
-		this.yVel = this.yVel + (totalAcc.y * dt);
-		//console.log("xAcc: " + totalAcc.x + " yAcc: " + totalAcc.y);
-		//console.log("xVel: " + this.xVel + " yVel: " + this.yVel);
-	
-	}
-
-	getXPos(timeStep = 0){
-		let xPos = this.xPos + (this.xVel * timeStep);
-		return xPos;
-	}
-
-	getYPos(dt = 0){
-		if(dt <= 0){
-			return this.yPos;
-		}
-		let totalAcc = this.Acc.getAcceleration("total");
-		let yPos = this.yPos + (this.yVel * dt) + 0.5 * totalAcc.y * dt * dt;
-                return yPos;
-        }
-
-	getXAcc(){
-		let totalAcc = this.Acc.getAcceleration("total");
-                return totalAcc.x;
-        }
-
-	getYAcc(type = "default"){
-		let totalAcc = this.Acc.getAcceleration("total");
-                return totalAcc.y;
-	}
-
-	hitY(){
-		let elasticity = 0.7;
-		// apply acceleration given by the normal force coming from the floor
-		this.yVel = this.yVel * -1 * elasticity;
-		this.Acc.newAcceleration(0, -9.8, "normal");
 	}
 
 }

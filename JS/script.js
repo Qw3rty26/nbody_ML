@@ -28,7 +28,7 @@ function setCanvasSize(canvas, winWidth, winHeight){
 setCanvasSize(systemCanvas, winWidth, winHeight);
 setCanvasSize(gridCanvas, winWidth, winHeight);
 
-let entitySystem = new system(0, winWidth, winHeight);
+let entitySystem = new System(winWidth, winHeight);
 
 
 entitySystem.addEntity(900, 1000, 0, 0, 300);
@@ -76,7 +76,7 @@ systemCanvas.addEventListener("wheel", (event)=>{ // used to zoom in and out
 
 //TODO make render and update independent from each other
 function render (timeStep) {
-	entitySystem.render(systemCtx);
+	entitySystem.fetch(systemCtx);
 	entitySystem.update(timeStep);
 }
 
@@ -103,13 +103,5 @@ window.addEventListener("resize", (event)=>{
         entitySystem.space.dragSpace(gridCtx, 0, 0); // redraw the grid
 	entitySystem.render(systemCtx); // render system
 })
-
-fetch("http://127.0.0.1:8000/simulate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify([1,2,3,4,5])
-})
-.then(res => res.json())
-.then(console.log);
 
 
