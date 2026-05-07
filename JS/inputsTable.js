@@ -63,6 +63,7 @@ const timeStep = document.getElementById("timeStep");
 function setTime (value) {
 	time = value;
 	if(value == 0){
+		entitySystem.pauseSystem()
 		timeStep.classList.remove("hidden");
 	}else{
 		timeStep.classList.add("hidden");
@@ -72,7 +73,7 @@ function setTime (value) {
 const stepTimeButton = document.getElementById("stepTimeButton");
 const stepTimeSelector = document.getElementById("stepTimeSelector");
 stepTimeButton.onclick = function () {
-	render(stepTimeSelector.value);
+	renderOnce(stepTimeSelector.value);
 }
 
 // initiate time

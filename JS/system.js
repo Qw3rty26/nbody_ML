@@ -4,10 +4,27 @@ class System{
 		this.properties = new properties();
 		this.gravity = new gravity();
 		this.entities = [];
-		fetch("http://127.0.0.1:8000/simulation/clear", {
-			method: "GET",
-			headers: { "Content-Type": "application/json" },
-		})
+	}
+
+	startSystem(){
+		fetch("http://127.0.0.1:8000/simulation/startSystem", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+	}
+
+	pauseSystem(){
+		fetch("http://127.0.0.1:8000/simulation/pauseSystem", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+	}
+
+	clearSystem(){
+		fetch("http://127.0.0.1:8000/simulation/clearSystem", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
 	}
 
 	addEntity(x=0, y=0, xVel=0, yVel=0,  mass=0){
@@ -22,16 +39,16 @@ class System{
 		//POST fetch
 	}
 
-	render(ctx){
+	renderEntities(ctx){
 		ctx.clearRect(0, 0, this.space.screenWidth, this.space.screenHeight); // clear the screen
 			this.entities.forEach(e =>{ // render each entity and its properties
-                		e.render(ctx, this.space);
-                        	this.properties.renderProperties(ctx, e, this.space);
+                		e.render(ctx, this.space); // entity
+                        	this.properties.renderProperties(ctx, e, this.space); // its properties
         		})
 	}
 
-	fetch(ctx){
-		fetch("http://127.0.0.1:8000/simulation/render", { // fetch python to get entities' data
+	fetchEntities(ctx){
+		fetch("http://127.0.0.1:8000/simulation/render", { // fetch backend to get entities data
                         method: "GET",
                         headers: { "Content-Type": "application/json" },
                 })
@@ -40,17 +57,18 @@ class System{
 			this.entities = data.entities.map(e => {
 				return new Entity(e.xPos, e.yPos, e.xVel, e.yVel, e.mass);
 			})
-        		this.render(ctx);
+        		this.renderEntities(ctx);
 		})
 	}
 
-	update(timeStep = 0){
+	updateEntities(timeStep = 0, ctx){
 		if(timeStep <= 0) return;
 		fetch("http://127.0.0.1:8000/simulation/update", {
     			method: "POST",
     			headers: { "Content-Type": "application/json" },
     			body: JSON.stringify({"timestep": Number(timeStep)})
 		})
+		.then(() => this.fetchEntities(ctx)) // fetch the newly updated entity positions
 	}
 
 }
