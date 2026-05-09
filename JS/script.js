@@ -45,9 +45,21 @@ function renderLoop () {
 
 document.addEventListener("DOMContentLoaded", () =>{
 	entitySystem.space.dragSpace(gridCtx, 0, 0);
-	entitySystem.startSystem();  // start the simulation
-	const es = new EventSource("/simulation/streamSystem");
-        es.onmessage = (e) => {
-            console.log(e.data);
-        };
+
+        // establish SSE connection to stream entity data
+    	window.sse = new EventSource("/simulation/startSSE");
+
+    	window.sse.onmessage = (message) => {
+                console.log("tick received");
+        	entitySystem.displayData(systemCtx, message.data);
+    	};
+
+    	window.sse.onerror = (err) => {
+        	console.log("SSE error", err);
+    	};
 })
+
+window.addEventListener("beforeunload", () => {
+	window.sse.close();  // close the SSE connection
+});
+

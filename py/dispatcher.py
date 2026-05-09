@@ -4,27 +4,20 @@ import time
 system = System()
 base_path = __file__.rsplit("/", 2)[0] #get the base path of application
 
-def startSystem():
-	system.start()
+def startSSE(handler):  #establish an SSE connection to constantly stream data to client-side whenever it is ready
+        system.startSSE(handler)
+
+def pauseSSE():
+	system.pauseSSE()
 	return {}, "application/json"
 
-def pauseSystem():
-	system.pause()
-	return {}, "application/json"
-
-def clearSystem():
-        system.clear()
+def unpauseSSE():
+        system.unpauseSSE()
         return {}, "application/json"
 
-def streamSystem(handler):  #establish an SSE connection to constantly stream data to client-side whenever it is ready
-        system.startLoop(handler)
-
-def updateSystem(data):
-	system.update(data.get("timestep", 0))
-	return {}, "application/json"
-
-def render(): #returns a JSON object with entity data
-	return system.render(), "application/json"
+def clearSystem():
+        system.clearSystem()
+        return {}, "application/json"
 
 def addEntity(data):
 	system.addEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])

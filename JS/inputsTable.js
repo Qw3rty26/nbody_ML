@@ -63,7 +63,7 @@ const timeStep = document.getElementById("timeStep");
 function setTime (value) {
 	time = value;
 	if(value == 0){
-		entitySystem.pauseSystem()
+		entitySystem.pauseSSE()
 		timeStep.classList.remove("hidden");
 	}else{
 		timeStep.classList.add("hidden");

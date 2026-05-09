@@ -21,14 +21,11 @@ routes = {
     "/JS/script.js":		lambda: dispatcher.js("script.js"),
     "/JS/mouseActions.js": 	lambda: dispatcher.js("mouseActions.js"),
 
-
-    "/simulation/startSystem":	lambda: dispatcher.startSystem(),
-    "/simulation/pauseSystem":	lambda: dispatcher.pauseSystem(),
-    "/simulation/render": 	lambda: dispatcher.render(),
+    "/simulation/pauseSSE":     lambda: dispatcher.pauseSSE(),
+    "/simulation/unpauseSSE":	lambda: dispatcher.unpauseSSE(),
     "/simulation/clearSystem": 	lambda: dispatcher.clearSystem(),
     #GET
     #POST
-    "/simulation/update": 	lambda data: dispatcher.updateSystem(data),
     "/simulation/add_entity": 	lambda data: dispatcher.addEntity(data)
     #POST
 }
@@ -53,9 +50,9 @@ class catcher(BaseHTTPRequestHandler):
                 self.send_response(204)
                 self.end_headers()
                 return
-        elif self.path == "/simulation/streamSystem":  #establish an SSE connection to constantly stream entity data to client-side
+        elif self.path == "/simulation/startSSE":  #establish an SSE connection to constantly stream entity data to client-side
                 self._set_headers_SSE()
-                dispatcher.streamSystem(self)
+                dispatcher.startSSE(self)
                 return
         elif self.path in routes:
             result, content_type = routes[self.path]()
