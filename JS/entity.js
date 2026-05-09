@@ -23,6 +23,16 @@ class Entity{
 		ctx.restore();
 	};
 
+	interpolate(oldE, alpha) { // interpolates the position of the entity using the old state of the entity "oldE" to simulate fps
+		return new Entity(
+        		oldE.xPos + (this.xPos - oldE.xPos) * alpha,
+        		oldE.yPos + (this.yPos - oldE.yPos) * alpha,
+        		oldE.xVel + (this.xVel - oldE.xVel) * alpha,
+        		oldE.yVel + (this.yVel - oldE.yVel) * alpha,
+        		this.mass / 1e13
+    		);
+	}
+
 	renderVelocityVector(ctx, space) {
 		const {x, y} = space.toScreen(this.xPos, this.yPos);
 		ctx.beginPath();

@@ -7,10 +7,12 @@ class System:
     def __init__(self):
         #self.space =
         self.dt = 0.016
+        self.tick = 0
         self.entity = []
         self.paused = True
 
     def _update(self):
+        self.tick += 1
         for e in self.entity:
             e.update(self.dt)
 
@@ -27,22 +29,24 @@ class System:
         while True: # loop indefinitely
             if not self.paused:
                 self._update()
-                try:
-                    payload = { # returns a JSON object containing an array of entities' data
-                        "entities": [e.getJSON() for e in self.entity]
-                    }
+                if self.tick == 60:
+                    self.tick = 0
+                    try:
+                        payload = { # returns a JSON object containing an array of entities' data
+                            "entities": [e.getJSON() for e in self.entity]
+                        }
 
-                    self.sse_handler.wfile.write( # write into the stream
-                        f"data: {json.dumps(payload)}\n\n".encode()
-                    )
+                        self.sse_handler.wfile.write( # write into the stream
+                            f"data: {json.dumps(payload)}\n\n".encode()
+                        )
+                        self.sse_handler.wfile.flush()
 
-                    self.sse_handler.wfile.flush()
-                except (BrokenPipeError, ConnectionResetError, OSError): # if SSE connection is closed, reloaded or an error occurs
-                    print("SSE client disconnected")
-                    self.clearSystem()
-                    self.sse_handler = None
-                    self.paused = True
-                    break
+                    except (BrokenPipeError, ConnectionResetError, OSError): # if SSE connection is closed, reloaded or an error occurs
+                        print("SSE client disconnected")
+                        self.clearSystem()
+                        self.sse_handler = None
+                        self.paused = True
+                        break
 
             time.sleep(self.dt)
 

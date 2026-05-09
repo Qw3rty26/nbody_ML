@@ -39,24 +39,24 @@ function renderOnce(timeStep) {
 }
 
 function renderLoop () {
-	console.log("poll backend")
-	setTimeout(renderLoop, 1000); // every second
+	console.log("frame")
+	entitySystem.renderEntities(systemCtx);
+	requestAnimationFrame(renderLoop); // continuous loop frames
 }
 
 document.addEventListener("DOMContentLoaded", () =>{
-	entitySystem.space.dragSpace(gridCtx, 0, 0);
-
         // establish SSE connection to stream entity data
     	window.sse = new EventSource("/simulation/startSSE");
 
     	window.sse.onmessage = (message) => {
-                console.log("tick received");
-        	entitySystem.displayData(systemCtx, message.data);
+                console.log("data received");
+        	entitySystem.saveData(systemCtx, message.data);
     	};
 
     	window.sse.onerror = (err) => {
         	console.log("SSE error", err);
     	};
+	requestAnimationFrame(renderLoop); // start displaying frames
 })
 
 window.addEventListener("beforeunload", () => {
