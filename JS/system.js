@@ -41,10 +41,18 @@ class System{
 		//POST fetch
 	}
 
+	setTimestep(timestep = 0.016){
+                fetch("http://127.0.0.1:8000/simulation/set_timestep", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({timestep})
+                })
+        }
+
 	renderEntities(ctx){
 		if(!this.newEntities)	return;
 
-		const snapshotInterval = 960;
+		const snapshotInterval = 2000; // (self.tick / self.dt) * 1000
 		let alpha = (performance.now() - this.lastSnapshotTime) / snapshotInterval;
 		alpha = Math.min(alpha, 1);
 

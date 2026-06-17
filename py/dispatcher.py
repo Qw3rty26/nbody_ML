@@ -27,6 +27,10 @@ def removeEntity(data):
 	#system.removeEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
 	return {}, "application/json"
 
+def setTimestep(data):
+        system.setTimestep(data["timestep"])
+        return {}, "application/json"
+
 def html(filename): #returns an html file
 	try:
 		with open(base_path + "/HTML/" + filename, "r", encoding="utf-8") as file:

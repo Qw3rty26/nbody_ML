@@ -30,7 +30,7 @@ setCanvasSize(gridCanvas, winWidth, winHeight);
 
 let entitySystem = new System(winWidth, winHeight);
 
-
+entitySystem.addEntity(0, 0, 0, 20, 300);
 entitySystem.addEntity(900, 1000, 0, 0, 300);
 entitySystem.addEntity(1500, 1000, -10, 20, 50);
 

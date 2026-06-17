@@ -29,7 +29,7 @@ class System:
         while True: # loop indefinitely
             if not self.paused:
                 self._update()
-                if self.tick == 60:
+                if self.tick == 120:
                     self.tick = 0
                     try:
                         payload = { # returns a JSON object containing an array of entities' data
@@ -66,3 +66,7 @@ class System:
     def removeEntity(self, entity):
         if entity in self.entity:
             self.entity.remove(entity)
+
+    def setTimestep(self, timestep):
+        if timestep == 0:
+            self.dt = timestep
