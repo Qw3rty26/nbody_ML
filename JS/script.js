@@ -30,16 +30,15 @@ setCanvasSize(gridCanvas, winWidth, winHeight);
 
 let entitySystem = new System(winWidth, winHeight);
 
-entitySystem.addEntity(0, 0, 0, 20, 300);
-entitySystem.addEntity(900, 1000, 0, 0, 300);
-entitySystem.addEntity(1500, 1000, -10, 20, 50);
+entitySystem.addEntity(xPos=0, yPos=0, zPos=0, xVel=0, yVel=0, zVel=0, mass=1000);
+entitySystem.addEntity(xPos=100, yPos=0, zPos=0, xVel=0.0, yVel=3.2, zVel=0, mass=1);
+
 
 function renderOnce(timeStep) {
 	entitySystem.updateEntities(timeStep, systemCtx); // update entities based on timeStep value
 }
 
 function renderLoop () {
-	console.log("frame")
 	entitySystem.renderEntities(systemCtx);
 	requestAnimationFrame(renderLoop); // continuous loop frames
 }
@@ -48,12 +47,11 @@ document.addEventListener("DOMContentLoaded", () =>{
         // establish SSE connection to stream entity data
     	window.sse = new EventSource("/simulation/startSSE");
 
-    	window.sse.onmessage = (message) => {
-                console.log("data received");
+    	window.sse.onmessage = (message) => { // SSE packet received
         	entitySystem.saveData(systemCtx, message.data);
     	};
 
-    	window.sse.onerror = (err) => {
+    	window.sse.onerror = (err) => { // SSE packet not received
         	console.log("SSE error", err);
     	};
 	requestAnimationFrame(renderLoop); // start displaying frames

@@ -29,11 +29,11 @@ class System{
                 })
 	}
 
-	addEntity(x=0, y=0, xVel=0, yVel=0,  mass=0){
+	addEntity(xPos=0, yPos=0, zPos=0, xVel=0, yVel=0, zVel=0, mass=0){
 		fetch("http://127.0.0.1:8000/simulation/add_entity", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({x, y, xVel, yVel, mass})
+                        body: JSON.stringify({xPos, yPos, zPos, xVel, yVel, zVel, mass})
                 })
         }
 
@@ -52,7 +52,7 @@ class System{
 	renderEntities(ctx){
 		if(!this.newEntities)	return;
 
-		const snapshotInterval = 2000; // (self.tick / self.dt) * 1000
+		const snapshotInterval = 960; // (self.tick / self.dt) * 1000
 		let alpha = (performance.now() - this.lastSnapshotTime) / snapshotInterval;
 		alpha = Math.min(alpha, 1);
 
@@ -68,6 +68,7 @@ class System{
       				return;
         		}
 			const interpolatedE = newE.interpolate(oldE, alpha);
+                        console.log("interpolatedFrame");
         		interpolatedE.render(ctx, this.space); // the entity
 			this.properties.renderProperties(ctx, interpolatedE, this.space); // its properties
 		})
@@ -79,9 +80,9 @@ class System{
 			this.oldEntities = this.newEntities;   // interpolating between the old and the new state
 		}
    		this.newEntities = parsed.entities.map(e => {
-       			return new Entity(e.xPos, e.yPos, e.xVel, e.yVel, e.mass);
+       			return new Entity(e.id, e.xPos, e.yPos, e.zPos, e.xVel, e.yVel, e.zVel, e.mass);
     		});
-
+                console.log("snapshot");
 		this.lastSnapshotTime = performance.now(); // used to calculate alpha to interpolate the entity
 	}
 

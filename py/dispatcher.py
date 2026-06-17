@@ -20,7 +20,7 @@ def clearSystem():
         return {}, "application/json"
 
 def addEntity(data):
-	system.addEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
+	system.addEntity(data["xPos"], data["yPos"], data["zPos"], data["xVel"], data["yVel"], data["zVel"], data["mass"])
 	return {}, "application/json"
 
 def removeEntity(data):

@@ -1,21 +1,26 @@
 class Entity{
-	constructor(xPos = 10.0, yPos = 10.0, xVel = 0.0, yVel = 0.0, mass = 10.0){
-		this.xPos = xPos;
+	constructor(id = 0, xPos = 0.0, yPos = 0.0, zPos = 0.0, xVel = 0.0, yVel = 0.0, zVel = 0.0, mass = 0.0){
+		this.id = id;
+                this.xPos = xPos;
 		this.yPos = yPos;
+                this.zPos = zPos;
 		this.xVel = xVel;
 		this.yVel = yVel;
+                this.zVel = zVel;
 		this.Acc = new accelerations();
-		this.mass = mass * 1e13;
-		this.radius = this.mass * 1e-13 ;
+		this.mass = mass;
+		if(this.mass == 1000){
+			this.radius = 50;
+		}else{ this.radius = 20;}
 	}
 
 	render(ctx, space) {
         	//TODO make it so that whenever the entity is outside the screen, it wont get rendered
 		const {x, y} = space.toScreen(this.xPos, this.yPos);
-		const radius = this.radius * space.scale;
+		const newRadius = this.radius * space.scale;
 		ctx.save();
 		ctx.beginPath();
-		ctx.arc(x, y, radius, 0, 2 * Math.PI); // draw circonference;
+		ctx.arc(x, y, newRadius, 0, 2 * Math.PI); // draw circonference;
 		ctx.fillStyle = "black";
         	ctx.strokeStyle = "black";
 		ctx.fill();
@@ -25,11 +30,14 @@ class Entity{
 
 	interpolate(oldE, alpha) { // interpolates the position of the entity using the old state of the entity "oldE" to simulate fps
 		return new Entity(
+                        oldE.id,
         		oldE.xPos + (this.xPos - oldE.xPos) * alpha,
         		oldE.yPos + (this.yPos - oldE.yPos) * alpha,
+                        oldE.zPos,
         		oldE.xVel + (this.xVel - oldE.xVel) * alpha,
         		oldE.yVel + (this.yVel - oldE.yVel) * alpha,
-        		this.mass / 1e13
+                        oldE.zVel,
+        		this.mass
     		);
 	}
 
