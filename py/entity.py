@@ -17,7 +17,7 @@ class Entity:
         self.xVel += (self.xAcc * dt)
         self.yVel += (self.yAcc * dt)
 
-    def render(self): # returns a JSON object containing the entity data
+    def getJSON(self): # returns a JSON object containing the entity data
         return {
             "xPos": self.xPos,
             "yPos": self.yPos,

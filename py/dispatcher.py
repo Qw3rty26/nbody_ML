@@ -1,45 +1,53 @@
 from system import System
+import time
 
 system = System()
 base_path = __file__.rsplit("/", 2)[0] #get the base path of application
 
-def update(data):
-    system.update(data.get("timestep", 0))
-    return {}, "application/json"
+def startSSE(handler):  #establish an SSE connection to constantly stream data to client-side whenever it is ready
+        system.startSSE(handler)
 
-def render(): #returns a JSON object with entity data
-    return system.render(), "application/json"
+def pauseSSE():
+	system.pauseSSE()
+	return {}, "application/json"
+
+def unpauseSSE():
+        system.unpauseSSE()
+        return {}, "application/json"
+
+def clearSystem():
+        system.clearSystem()
+        return {}, "application/json"
 
 def addEntity(data):
-    system.addEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
-    return {}, "application/json"
+	system.addEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
+	return {}, "application/json"
 
 def removeEntity(data):
-    #system.removeEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
-    return {}, "application/json"
+	#system.removeEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
+	return {}, "application/json"
 
-def clear():
-    system.clear()
-    return {}, "application/json"
+def setTimestep(data):
+        system.setTimestep(data["timestep"])
+        return {}, "application/json"
 
 def html(filename): #returns an html file
-    try:
-        with open(base_path + "/HTML/" + filename, "r", encoding="utf-8") as file:
-            return file.read(), "text/html"
-    except FileNotFoundError:
-        return {"message": filename + " could not be found."}, "application/json"
+	try:
+		with open(base_path + "/HTML/" + filename, "r", encoding="utf-8") as file:
+			return file.read(), "text/html"
+	except FileNotFoundError:
+        	return {"message": filename + " could not be found."}, "application/json"
 
 def css(filename): #returns a css file
-    try:
-        with open(base_path + "/CSS/" + filename, "r", encoding="utf-8") as file:
-            return file.read(), "text/css"
-    except FileNotFoundError:
-        return {"message": filename + " could not be found."}, "application/json"
+	try:
+		with open(base_path + "/CSS/" + filename, "r", encoding="utf-8") as file:
+			return file.read(), "text/css"
+	except FileNotFoundError:
+		return {"message": filename + " could not be found."}, "application/json"
 
 def js(filename): #returns a javascript file
-    try:
-        with open(base_path + "/JS/" + filename, "r", encoding="utf-8") as file:
-            return file.read(), "application/javascript"
-    except FileNotFoundError:
-        return {"message": filename + " could not be found."}, "application/json"
-
+	try:
+		with open(base_path + "/JS/" + filename, "r", encoding="utf-8") as file:
+			return file.read(), "application/javascript"
+	except FileNotFoundError:
+		return {"message": filename + " could not be found."}, "application/json"

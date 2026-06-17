@@ -1,4 +1,4 @@
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import dispatcher
 
@@ -6,22 +6,27 @@ PORT = 8000
 
 routes = {
     #GET
-    "/": lambda: dispatcher.html("index.html"), # Use lambda to read file on-demand so changes update without restarting server
-    "/CSS/style.css": lambda: dispatcher.css("style.css"),
-    "/JS/properties.js": lambda: dispatcher.js("properties.js"),
-    "/JS/acceleration.js": lambda: dispatcher.js("acceleration.js"),
-    "/JS/space.js": lambda: dispatcher.js("space.js"),
-    "/JS/gravity.js": lambda: dispatcher.js("gravity.js"),
-    "/JS/entity.js": lambda: dispatcher.js("entity.js"),
-    "/JS/system.js": lambda: dispatcher.js("system.js"),
-    "/JS/inputsTable.js": lambda: dispatcher.js("inputsTable.js"),
-    "/JS/script.js": lambda: dispatcher.js("script.js"),
-    "/simulation/render": lambda: dispatcher.render(),
-    "/simulation/clear": lambda: dispatcher.clear(),
+    "/": 			lambda: dispatcher.html("index.html"), 		# Use lambda to read file on-demand so changes update
+    "/CSS/style.css": 		lambda: dispatcher.css("style.css"),   		# without restarting server
+
+    "/JS/properties.js": 	lambda: dispatcher.js("properties.js"),
+    "/JS/acceleration.js": 	lambda: dispatcher.js("acceleration.js"),
+    "/JS/space.js": 		lambda: dispatcher.js("space.js"),
+
+    "/JS/gravity.js": 		lambda: dispatcher.js("gravity.js"),
+    "/JS/entity.js": 		lambda: dispatcher.js("entity.js"),
+    "/JS/system.js": 		lambda: dispatcher.js("system.js"),
+
+    "/JS/inputsTable.js": 	lambda: dispatcher.js("inputsTable.js"),
+    "/JS/script.js":		lambda: dispatcher.js("script.js"),
+    "/JS/mouseActions.js": 	lambda: dispatcher.js("mouseActions.js"),
+
+    "/simulation/pauseSSE":     lambda: dispatcher.pauseSSE(),
+    "/simulation/unpauseSSE":	lambda: dispatcher.unpauseSSE(),
+    "/simulation/clearSystem": 	lambda: dispatcher.clearSystem(),
     #GET
     #POST
-    "/simulation/update": lambda data: dispatcher.update(data),
-    "/simulation/add_entity": lambda data: dispatcher.addEntity(data)
+    "/simulation/add_entity": 	lambda data: dispatcher.addEntity(data)
     #POST
 }
 
@@ -32,10 +37,23 @@ class catcher(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")  # allow browser requests
         self.end_headers()
 
+    def _set_headers_SSE(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/event-stream")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
     def do_GET(self):
         if self.path == "/favicon.ico":
                 self.send_response(204)
                 self.end_headers()
+                return
+        elif self.path == "/simulation/startSSE":  #establish an SSE connection to constantly stream entity data to client-side
+                self._set_headers_SSE()
+                dispatcher.startSSE(self)
+                return
         elif self.path in routes:
             result, content_type = routes[self.path]()
             self._set_headers(content_type)
@@ -45,8 +63,10 @@ class catcher(BaseHTTPRequestHandler):
                 self.wfile.write(result.encode()) #if response contains html/css/js
         else:
             self.send_response(404)
+            self.send_header("Content-type", "text/plain")
+            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write("Not found".encode())
+            self.wfile.write(b"Not found")
 
     def do_POST(self):
         if self.path in routes:
@@ -68,7 +88,7 @@ class catcher(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
-server = HTTPServer(('127.0.0.1', PORT), catcher)
+server = ThreadingHTTPServer(('127.0.0.1', PORT), catcher)
 print(f"Server started on 127.0.0.1:8000 .")
 server.serve_forever()
 

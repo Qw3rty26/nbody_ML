@@ -1,13 +1,32 @@
 class System{
-	constructor (maxX=0, maxY=0){
+	constructor(maxX=0, maxY=0){
 		this.space = new space(0, 0, maxX, maxY, 100);
 		this.properties = new properties();
 		this.gravity = new gravity();
-		this.entities = [];
-		fetch("http://127.0.0.1:8000/simulation/clear", {
-			method: "GET",
-			headers: { "Content-Type": "application/json" },
-		})
+		this.newEntities = [];
+                this.oldEntities = [];
+		this.lastSnapshotTime = performance.now();
+	}
+
+	pauseSSE(){
+		fetch("http://127.0.0.1:8000/simulation/pauseSSE", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+	}
+
+	unpauseSSE(){
+                fetch("http://127.0.0.1:8000/simulation/unpauseSSE", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+        }
+
+	clearSystem(){
+		fetch("http://127.0.0.1:8000/simulation/clearSystem", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
 	}
 
 	addEntity(x=0, y=0, xVel=0, yVel=0,  mass=0){
@@ -22,35 +41,48 @@ class System{
 		//POST fetch
 	}
 
-	render(ctx){
-		ctx.clearRect(0, 0, this.space.screenWidth, this.space.screenHeight); // clear the screen
-			this.entities.forEach(e =>{ // render each entity and its properties
-                		e.render(ctx, this.space);
-                        	this.properties.renderProperties(ctx, e, this.space);
-        		})
-	}
-
-	fetch(ctx){
-		fetch("http://127.0.0.1:8000/simulation/render", { // fetch python to get entities' data
-                        method: "GET",
+	setTimestep(timestep = 0.016){
+                fetch("http://127.0.0.1:8000/simulation/set_timestep", {
+                        method: "POST",
                         headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({timestep})
                 })
-                .then(res => res.json())
-                .then(data => {
-			this.entities = data.entities.map(e => {
-				return new Entity(e.xPos, e.yPos, e.xVel, e.yVel, e.mass);
-			})
-        		this.render(ctx);
+        }
+
+	renderEntities(ctx){
+		if(!this.newEntities)	return;
+
+		const snapshotInterval = 2000; // (self.tick / self.dt) * 1000
+		let alpha = (performance.now() - this.lastSnapshotTime) / snapshotInterval;
+		alpha = Math.min(alpha, 1);
+
+		ctx.clearRect(0, 0, this.space.screenWidth, this.space.screenHeight); // clear the screen
+
+
+		//interpolate to simulate frames
+		this.newEntities.forEach((newE, i) => { // interpolate each entity and its properties
+			const oldE = this.oldEntities?.[i];
+        		if (!oldE) {
+            			newE.render(ctx, this.space); // the entity
+              		        this.properties.renderProperties(ctx, newE, this.space); // its properties
+      				return;
+        		}
+			const interpolatedE = newE.interpolate(oldE, alpha);
+        		interpolatedE.render(ctx, this.space); // the entity
+			this.properties.renderProperties(ctx, interpolatedE, this.space); // its properties
 		})
 	}
 
-	update(timeStep = 0){
-		if(timeStep <= 0) return;
-		fetch("http://127.0.0.1:8000/simulation/update", {
-    			method: "POST",
-    			headers: { "Content-Type": "application/json" },
-    			body: JSON.stringify({"timestep": Number(timeStep)})
-		})
+	saveData(ctx, data) {
+    		const parsed = JSON.parse(data);
+                if(this.newEntities){ 	// when a new tick from the phys engine comes in, we save it so that we can simulate FPS by
+			this.oldEntities = this.newEntities;   // interpolating between the old and the new state
+		}
+   		this.newEntities = parsed.entities.map(e => {
+       			return new Entity(e.xPos, e.yPos, e.xVel, e.yVel, e.mass);
+    		});
+
+		this.lastSnapshotTime = performance.now(); // used to calculate alpha to interpolate the entity
 	}
 
 }

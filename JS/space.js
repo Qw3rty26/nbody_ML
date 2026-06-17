@@ -9,11 +9,12 @@ class space{
 	}
 
 	#drawGrid(ctx){
+		ctx.save();
 		ctx.clearRect(0, 0, this.screenWidth, this.screenHeight); // clear the grid
 		ctx.beginPath(); // start drawing
 		ctx.strokeStyle = "#ccc"; // gray
 		ctx.lineWidth = 1;
-		
+
 		for(let x = this.originX % this.zoom; x < this.screenWidth; x += this.zoom){ // draw vertical lines
 			ctx.moveTo(x, 0); // from top
 			ctx.lineTo(x, this.screenHeight); // to bottom
@@ -22,7 +23,6 @@ class space{
 			ctx.moveTo(0, y); // from left
 			ctx.lineTo(this.screenWidth, y); // to right
 		}
-
 		ctx.stroke();
 		ctx.restore();
 	}
@@ -39,10 +39,10 @@ class space{
 		this.originY += draggedY;
 		this.#drawGrid(ctx); // update grid
 	}
-	
+
 	zoomSpace(ctx, zoomedAmount=0){
 		const oldZoom = this.zoom;
-		
+
 		this.zoom += zoomedAmount / 10;
 		this.zoom = Math.max(10, Math.min(this.zoom, 150)); // clamp zoom to 10 <= this.zoom <= 150
 		this.scale = this.zoom / 100;
