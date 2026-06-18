@@ -2,43 +2,156 @@ class System{
 	constructor(maxX=0, maxY=0){
 		this.space = new space(0, 0, maxX, maxY, 100);
 		this.properties = new properties();
-		this.gravity = new gravity();
 		this.newEntities = [];
                 this.oldEntities = [];
 		this.lastSnapshotTime = performance.now();
-	}
 
-	pauseSSE(){
-		fetch("http://127.0.0.1:8000/simulation/pauseSSE", {
+		this.sse = null;
+		window.addEventListener("beforeunload", () => {
+        		if (this.sse) {
+            			this.sse.close();
+        		}
+    		});
+	}
+	createPhysicsLoop(){
+                fetch("http://127.0.0.1:8000/simulation/createPhysicsLoop", {
                         method: "GET",
                         headers: { "Content-Type": "application/json" },
                 })
-	}
-
-	unpauseSSE(){
-                fetch("http://127.0.0.1:8000/simulation/unpauseSSE", {
-                        method: "GET",
-                        headers: { "Content-Type": "application/json" },
+                .then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        this.startPhysicsLoop();
                 })
+                .catch(err => {
+                        console.error("Error creating the physics loop:", err);
+                });
         }
+
+	destroyPhysicsLoop(){
+                fetch("http://127.0.0.1:8000/simulation/destroyPhysicsLoop", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+                .then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        return response.json();
+                })
+                .catch(err => {
+                        console.error("Error destroying the physics loop:", err);
+                });
+        }
+
+	startPhysicsLoop(){
+                fetch("http://127.0.0.1:8000/simulation/startPhysicsLoop", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+                .then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        this.addEntity(0, 0, 0, 0, 0, 0, 1000);
+			this.addEntity(100,0, 0, 0.0, 3.2, 0, 1);
+
+                })
+                .catch(err => {
+                        console.error("Error starting the physics loop:", err);
+                });
+        }
+
+	pausePhysicsLoop(){
+                fetch("http://127.0.0.1:8000/simulation/pausePhysicsLoop", {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                })
+                .then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        return response.json();
+                })
+                .catch(err => {
+                        console.error("Error pausing the physics loop:", err);
+                });
+        }
+
+        connectSSE(){
+		// establish SSE connection to stream entity data
+        	this.sse = new EventSource("/networking/connectSSE");
+
+        	this.sse.onmessage = (message) => { // SSE packet received
+			try {
+        			const parsed = JSON.parse(message.data);
+        			this.saveData(systemCtx, parsed);
+    			}catch (e) {
+        			return;
+    			}
+		};
+
+        	this.sse.onerror = (err) => { // SSE packet not received
+                	console.log("SSE error", err);
+        	}
+
+		this.sse.onopen = () => {
+    			this.createPhysicsLoop();
+		};
+	}
+
+	disconnectSSE(){
+        	fetch("http://127.0.0.1:8000/networking/disconnectSSE", {
+                	method: "GET",
+                	headers: { "Content-Type": "application/json" },
+        	})
+        	.then(response => {
+                	if (!response.ok) throw new Error("Request failed");
+                	return response.json();
+        	})
+        	.then(data => {
+                	this.sse = null;
+        	})
+        	.catch(err => {
+        	        console.error("Error disconnecting SSE:", err);
+        	});
+	}
 
 	clearSystem(){
 		fetch("http://127.0.0.1:8000/simulation/clearSystem", {
                         method: "GET",
                         headers: { "Content-Type": "application/json" },
                 })
+                .then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        return response.json();
+                })
+                .catch(err => {
+                        console.error("Error in clearing the system:", err);
+                });
 	}
 
 	addEntity(xPos=0, yPos=0, zPos=0, xVel=0, yVel=0, zVel=0, mass=0){
-		fetch("http://127.0.0.1:8000/simulation/add_entity", {
+		fetch("http://127.0.0.1:8000/simulation/addEntity", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({xPos, yPos, zPos, xVel, yVel, zVel, mass})
                 })
+		.then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        return response.json();
+                })
+                .catch(err => {
+                        console.error("Error in adding an entity in the system:", err);
+                });
         }
 
 	removeEntity(index){
-		//POST fetch
+		fetch("http://127.0.0.1:8000/simulation/removeEntity", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({id})
+                })
+                .then(response => {
+                        if (!response.ok) throw new Error("Request failed");
+                        return response.json();
+                })
+                .catch(err => {
+                        console.error("Error in removing an entity from the system:", err);
+                });
 	}
 
 	setTimestep(timestep = 0.016){
@@ -74,8 +187,7 @@ class System{
 		})
 	}
 
-	saveData(ctx, data) {
-    		const parsed = JSON.parse(data);
+	saveData(ctx, parsed) {
                 if(this.newEntities){ 	// when a new tick from the phys engine comes in, we save it so that we can simulate FPS by
 			this.oldEntities = this.newEntities;   // interpolating between the old and the new state
 		}

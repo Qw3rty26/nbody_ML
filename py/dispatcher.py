@@ -4,28 +4,42 @@ import time
 system = System()
 base_path = __file__.rsplit("/", 2)[0] #get the base path of application
 
-def startSSE(handler):  #establish an SSE connection to constantly stream data to client-side whenever it is ready
-        system.startSSE(handler)
 
-def pauseSSE():
-	system.pauseSSE()
-	return {}, "application/json"
-
-def unpauseSSE():
-        system.unpauseSSE()
+def createPhysicsLoop():
+        system.createPhysicsLoop()
         return {}, "application/json"
 
-def clearSystem():
-        system.clearSystem()
+def destroyPhysicsLoop():
+        system.destroyPhysicsLoop()
+        return {}, "application/json"
+
+def startPhysicsLoop():
+        system.startPhysicsLoop()
+        return {}, "application/json"
+
+def pausePhysicsLoop():
+        system.pausePhysicsLoop()
+        return {}, "application/json"
+
+def connectSSE(handler): #establish an SSE connection to constantly stream data to client-side whenever it is ready
+        system.connectSSE(handler)
+        return {}, "application/json"
+
+def disconnectSSE():
+        system.disconnectSSE()
         return {}, "application/json"
 
 def addEntity(data):
-	system.addEntity(data["xPos"], data["yPos"], data["zPos"], data["xVel"], data["yVel"], data["zVel"], data["mass"])
+	system.simulation.addEntity(data["xPos"], data["yPos"], data["zPos"], data["xVel"], data["yVel"], data["zVel"], data["mass"])
 	return {}, "application/json"
 
 def removeEntity(data):
-	#system.removeEntity(data["x"], data["y"], data["xVel"], data["yVel"], data["mass"])
+	system.simulation.removeEntity(data["id"])
 	return {}, "application/json"
+
+def clearSystem():
+        system.simulation.clear()
+        return {}, "application/json"
 
 def setTimestep(data):
         system.setTimestep(data["timestep"])

@@ -6,27 +6,30 @@ PORT = 8000
 
 routes = {
     #GET
-    "/": 			lambda: dispatcher.html("index.html"), 		# Use lambda to read file on-demand so changes update
-    "/CSS/style.css": 		lambda: dispatcher.css("style.css"),   		# without restarting server
+    "/": 				lambda: dispatcher.html("index.html"), 		# Use lambda to read file on-demand so changes update
+    "/CSS/style.css": 			lambda: dispatcher.css("style.css"),   		# without restarting server
 
-    "/JS/properties.js": 	lambda: dispatcher.js("properties.js"),
-    "/JS/acceleration.js": 	lambda: dispatcher.js("acceleration.js"),
-    "/JS/space.js": 		lambda: dispatcher.js("space.js"),
+    "/JS/properties.js": 		lambda: dispatcher.js("properties.js"),
+    "/JS/acceleration.js": 		lambda: dispatcher.js("acceleration.js"),
+    "/JS/space.js": 			lambda: dispatcher.js("space.js"),
+    "/JS/gravity.js": 			lambda: dispatcher.js("gravity.js"),
+    "/JS/entity.js": 			lambda: dispatcher.js("entity.js"),
+    "/JS/system.js": 			lambda: dispatcher.js("system.js"),
 
-    "/JS/gravity.js": 		lambda: dispatcher.js("gravity.js"),
-    "/JS/entity.js": 		lambda: dispatcher.js("entity.js"),
-    "/JS/system.js": 		lambda: dispatcher.js("system.js"),
+    "/JS/inputsTable.js": 		lambda: dispatcher.js("inputsTable.js"),
+    "/JS/script.js":			lambda: dispatcher.js("script.js"),
+    "/JS/mouseActions.js": 		lambda: dispatcher.js("mouseActions.js"),
 
-    "/JS/inputsTable.js": 	lambda: dispatcher.js("inputsTable.js"),
-    "/JS/script.js":		lambda: dispatcher.js("script.js"),
-    "/JS/mouseActions.js": 	lambda: dispatcher.js("mouseActions.js"),
-
-    "/simulation/pauseSSE":     lambda: dispatcher.pauseSSE(),
-    "/simulation/unpauseSSE":	lambda: dispatcher.unpauseSSE(),
-    "/simulation/clearSystem": 	lambda: dispatcher.clearSystem(),
+    "/networking/disconnectSSE":	lambda: dispatcher.disconnectSSE(),
+    "/simulation/createPhysicsLoop":	lambda: dispatcher.createPhysicsLoop(),
+    "/simulation/destroyPhysicsLoop":   lambda: dispatcher.destroyPhysicsLoop(),
+    "/simulation/startPhysicsLoop":     lambda: dispatcher.startPhysicsLoop(),
+    "/simulation/pausePhysicsLoop":     lambda: dispatcher.pausePhysicsLoop(),
+    "/simulation/clearSystem": 		lambda: dispatcher.clearSystem(),
     #GET
     #POST
-    "/simulation/add_entity": 	lambda data: dispatcher.addEntity(data)
+    "/simulation/addEntity": 		lambda data: dispatcher.addEntity(data),
+    "/simulation/removeEntity":         lambda data: dispatcher.removeEntity(data)
     #POST
 }
 
@@ -50,9 +53,9 @@ class catcher(BaseHTTPRequestHandler):
                 self.send_response(204)
                 self.end_headers()
                 return
-        elif self.path == "/simulation/startSSE":  #establish an SSE connection to constantly stream entity data to client-side
+        elif self.path == "/networking/connectSSE":  #establish an SSE connection to constantly stream entity data to client-side
                 self._set_headers_SSE()
-                dispatcher.startSSE(self)
+                dispatcher.connectSSE(self)
                 return
         elif self.path in routes:
             result, content_type = routes[self.path]()
@@ -90,5 +93,7 @@ class catcher(BaseHTTPRequestHandler):
 
 server = ThreadingHTTPServer(('127.0.0.1', PORT), catcher)
 print(f"Server started on 127.0.0.1:8000 .")
-server.serve_forever()
-
+try:
+   server.serve_forever()
+except KeyboardInterrupt:
+   dispatcher.system.destroyPhysicsLoop()
