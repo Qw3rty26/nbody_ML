@@ -9,9 +9,12 @@ class Entity{
                 this.zVel = zVel;
 		this.Acc = new accelerations();
 		this.mass = mass;
-		if(this.mass == 1000){
-			this.radius = 50;
-		}else{ this.radius = 20;}
+		if (this.mass > 0.1) {
+    			this.radius = 60;
+		} else {
+    			const m = this.mass / 3e-6;
+    			this.radius = Math.max(4, 4 + Math.cbrt(m) * 5);
+		}
 	}
 
 	render(ctx, space) {
@@ -39,6 +42,23 @@ class Entity{
                         oldE.zVel,
         		this.mass
     		);
+	}
+
+	//TODO: TO BE FIXED
+	renderMass(ctx, space) {
+    		const { x, y } = space.toScreen(this.xPos, this.yPos);
+    		const radius = this.radius * space.scale;
+
+    		ctx.save();
+
+    		ctx.fillStyle = "white";
+    		ctx.font = "12px Arial";
+    		ctx.textAlign = "center";
+    		ctx.textBaseline = "middle";
+
+    		ctx.fillText(this.mass, x, y);
+
+    		ctx.restore();
 	}
 
 	renderVelocityVector(ctx, space) {

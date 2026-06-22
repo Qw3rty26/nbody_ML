@@ -28,8 +28,9 @@ class space{
 	}
 
 	toScreen(absoluteX, absoluteY){
-		const relativeX = this.originX + (absoluteX * this.scale);
-    		const relativeY = this.originY + (absoluteY * this.scale);
+		const pixelsPerAU = 400;
+		const relativeX = this.originX + (absoluteX * pixelsPerAU * this.scale);
+    		const relativeY = this.originY + (absoluteY * pixelsPerAU * this.scale);
 
 		return { x: relativeX, y: relativeY };
 	}

@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import dispatcher
+import threading
 
 PORT = 8000
 
@@ -93,7 +94,14 @@ class catcher(BaseHTTPRequestHandler):
 
 server = ThreadingHTTPServer(('127.0.0.1', PORT), catcher)
 print(f"Server started on 127.0.0.1:8000 .")
+
 try:
    server.serve_forever()
 except KeyboardInterrupt:
+   print("Shutting down...")
    dispatcher.system.destroyPhysicsLoop()
+   dispatcher.system.disconnectSSE()
+   server.shutdown()
+   server.server_close()
+   for t in threading.enumerate():
+      print(t, t.daemon)

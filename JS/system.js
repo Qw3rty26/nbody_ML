@@ -48,8 +48,8 @@ class System{
                 })
                 .then(response => {
                         if (!response.ok) throw new Error("Request failed");
-                        this.addEntity(0, 0, 0, 0, 0, 0, 1000);
-			this.addEntity(100,0, 0, 0.0, 3.2, 0, 1);
+                        //this.addEntity(0, 0, 0, 0, 0, 0, 1000);
+			//this.addEntity(100,0, 0, 0.0, 3.2, 0, 1);
 
                 })
                 .catch(err => {
@@ -181,7 +181,7 @@ class System{
       				return;
         		}
 			const interpolatedE = newE.interpolate(oldE, alpha);
-                        console.log("interpolatedFrame");
+                        //console.log("interpolatedFrame");
         		interpolatedE.render(ctx, this.space); // the entity
 			this.properties.renderProperties(ctx, interpolatedE, this.space); // its properties
 		})

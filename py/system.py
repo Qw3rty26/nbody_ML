@@ -27,7 +27,7 @@ class System:
     def destroyPhysicsLoop(self):
        self.running = False
 
-       if self.thread:
+       if self.thread and self.thread != threading.current_thread():
           self.thread.join(timeout=1)
 
        self.thread = None
@@ -41,11 +41,13 @@ class System:
              self.tick += 1
              if self.tick % 60 == 0:
                 self.tick = 0
-                self.sse.write(self.simulation.getSnapshot())
+                if (self.sse.write(self.simulation.getSnapshot()) == False):
+                   self.destroyPhysicsLoop()
           time.sleep(0.016)
 
     def startPhysicsLoop(self):
        self.paused = False
+       self.simulation.simulation.add("solar system")
 
     def pausePhysicsLoop(self):
        self.paused = True
@@ -56,5 +58,6 @@ class System:
        self.sse = SSE(handler);
 
     def disconnectSSE(self):
-       self.sse = None;
+       print(f"called disconnect SSE")
+       self.sse.close()
     # SSE

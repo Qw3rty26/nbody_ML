@@ -19,5 +19,9 @@ class SSE:
 
       except (BrokenPipeError, ConnectionResetError, OSError):
          print("SSE client disconnected")
-         self.handler = None
+         self.close()
          return False
+
+   def close(self):
+      self.handler.wfile.close()
+      self.handler = None

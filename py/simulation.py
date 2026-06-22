@@ -5,14 +5,19 @@ import rebound
 class Simulation:
     def __init__(self):
         self.simulation = rebound.Simulation()
+        self.simulation.integrator = "leapfrog"
         self.simulation.G = 1.0
-        self.simulation.dt = 0.016;
-        self.timeWarp = 5
+        self.simulation.t = 0
+        self.timeWarp = 6
+        self.simulation.dt = 1e-4
+        self.simulation.softening = 0.01
 
     def update(self):
        if len(self.simulation.particles) < 1:
           return
-       self.simulation.integrate(self.simulation.t + self.simulation.dt * self.timeWarp)
+
+       for _ in range(self.timeWarp):
+          self.simulation.integrate(self.simulation.t + self.simulation.dt)
 
     def getSnapshot(self):
        snapshot = { # returns a JSON object containing an array of entities' data
