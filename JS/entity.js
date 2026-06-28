@@ -24,8 +24,8 @@ class Entity{
 		ctx.save();
 		ctx.beginPath();
 		ctx.arc(x, y, newRadius, 0, 2 * Math.PI); // draw circonference;
-		ctx.fillStyle = "black";
-        	ctx.strokeStyle = "black";
+		ctx.fillStyle = "#E6EAF2";
+        	ctx.strokeStyle = "#E6EAF2";
 		ctx.fill();
         	ctx.stroke();
 		ctx.restore();

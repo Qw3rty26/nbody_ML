@@ -40,6 +40,7 @@ function renderLoop () {
 }
 
 document.addEventListener("DOMContentLoaded", () =>{
+        entitySystem.space.dragSpace(gridCtx, canvas.width/2, canvas.height/2); // redraw the grid
       	entitySystem.connectSSE(); // establish SSE connection
 	requestAnimationFrame(renderLoop); // start displaying frames
 })

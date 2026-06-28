@@ -22,7 +22,7 @@ class Simulation:
         self.simulation.integrator = "leapfrog"
         self.simulation.G = 1.0
         self.simulation.t = 0
-        self.timeWarp = 2000
+        self.timeWarp = 20
         self.simulation.dt = 1e-4
         self.simulation.softening = 0.01
 

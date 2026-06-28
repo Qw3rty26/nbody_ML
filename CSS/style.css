@@ -7,6 +7,7 @@
 }
 
 #inputsTable {
+        color: white;
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -19,8 +20,8 @@
 }
 
 #gridCanvas {
-	 background: #F3F1E9; 
-	/* background: #010B19 BLACK */
+	/*background: #F3F1E9; cream white*/
+	background: #05070D; /* soft black */
 	position: absolute;
 	top: 0px;
 	left: 0px;

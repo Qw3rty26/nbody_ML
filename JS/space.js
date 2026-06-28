@@ -12,7 +12,8 @@ class space{
 		ctx.save();
 		ctx.clearRect(0, 0, this.screenWidth, this.screenHeight); // clear the grid
 		ctx.beginPath(); // start drawing
-		ctx.strokeStyle = "#ccc"; // gray
+		ctx.strokeStyle = "#141A24"; //white
+                //ctx.strokeStyle = "#ccc"; // gray
 		ctx.lineWidth = 1;
 
 		for(let x = this.originX % this.zoom; x < this.screenWidth; x += this.zoom){ // draw vertical lines
