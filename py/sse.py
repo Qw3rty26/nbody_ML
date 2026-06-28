@@ -4,24 +4,22 @@ import json
 class SSE:
    def __init__(self, handler = None):
       self.handler = handler
-      self.handler.wfile.write(b"data: connected\n\n")
-      self.handler.wfile.flush()
+      self.lock = threading.Lock()
 
    def write(self, payload):
       if not self.handler:
-         return False
-      try:
-         self.handler.wfile.write( # write into the stream
-            f"data: {json.dumps(payload)}\n\n".encode()
-         )
-         self.handler.wfile.flush()
-         return True
+         raise RuntimeError("SSE Handler is undefined")
 
-      except (BrokenPipeError, ConnectionResetError, OSError):
-         print("SSE client disconnected")
+      try:
+         data = f"data: {json.dumps(payload)}\n\n".encode()
+         with self.lock:
+            self.handler.wfile.write(data)
+
+      except Exception:
          self.close()
-         return False
+         raise RuntimeError("SSE Disconnected")
 
    def close(self):
-      self.handler.wfile.close()
+      if not self.handler:
+         return
       self.handler = None

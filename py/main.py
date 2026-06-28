@@ -62,7 +62,10 @@ class catcher(BaseHTTPRequestHandler):
             result, content_type = routes[self.path]()
             self._set_headers(content_type)
             if isinstance(result, dict):
-                self.wfile.write(json.dumps(result).encode()) #if response contains JSON
+                try:
+                   self.wfile.write(json.dumps(result).encode()) #if response contains JSON
+                except (BrokenPipeError, ConnectionResetError):
+                   return
             else:
                 self.wfile.write(result.encode()) #if response contains html/css/js
         else:
@@ -95,6 +98,14 @@ class catcher(BaseHTTPRequestHandler):
 server = ThreadingHTTPServer(('127.0.0.1', PORT), catcher)
 print(f"Server started on 127.0.0.1:8000 .")
 
+#server.timeout = 0.5
+
+#try:
+#    while True:
+#        server.handle_request()
+#except KeyboardInterrupt:
+#    print("KeyboardInterrupt!")
+
 try:
    server.serve_forever()
 except KeyboardInterrupt:
@@ -105,3 +116,4 @@ except KeyboardInterrupt:
    server.server_close()
    for t in threading.enumerate():
       print(t, t.daemon)
+

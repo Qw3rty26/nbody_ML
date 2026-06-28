@@ -2,13 +2,27 @@ import time
 import json
 import rebound
 
+def physicsLoop(queue):
+    from simulation import Simulation
+    import time
+
+    SLEEP_TIME = 0.016
+
+    solarSystem = Simulation()
+    solarSystem.simulation.add("solar system")
+
+    while True:
+       solarSystem.update()
+       queue.put(solarSystem.getSnapshot())
+       time.sleep(SLEEP_TIME)
+
 class Simulation:
     def __init__(self):
         self.simulation = rebound.Simulation()
         self.simulation.integrator = "leapfrog"
         self.simulation.G = 1.0
         self.simulation.t = 0
-        self.timeWarp = 6
+        self.timeWarp = 2000
         self.simulation.dt = 1e-4
         self.simulation.softening = 0.01
 
@@ -18,6 +32,7 @@ class Simulation:
 
        for _ in range(self.timeWarp):
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
+       self.simulation.stop()
 
     def getSnapshot(self):
        snapshot = { # returns a JSON object containing an array of entities' data

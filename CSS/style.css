@@ -19,7 +19,8 @@
 }
 
 #gridCanvas {
-	background: #F3F1E9;
+	 background: #F3F1E9; 
+	/* background: #010B19 BLACK */
 	position: absolute;
 	top: 0px;
 	left: 0px;

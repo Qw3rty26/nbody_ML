@@ -1,63 +1,46 @@
 from sse import SSE
-from simulation import Simulation
-import threading
+from multiprocessing import Process, Queue
+from simulation import physicsLoop
 import time
 
 class System:
     def __init__(self):
-        self.tick = 0
-        self.sse = None
-        self.simulation = Simulation()
-        #threading
-        self.running = False
-        self.paused = True
-        self.thread = None
-        #threading
+       self.sse = None
+       self.process = None
+       self.queue = Queue()
 
-    # PHYSICS LOOP
     def createPhysicsLoop(self):
-       if self.running:
-          return False
-
-       self.thread = threading.Thread(target = self.physicsLoop, daemon = True)
-       self.running = True
-       self.thread.start()
-       return True
+       self.process = Process(target = physicsLoop, args = (self.queue,))
 
     def destroyPhysicsLoop(self):
-       self.running = False
+       if self.process is None:
+          raise RuntimeError("Physics process not created")
 
-       if self.thread and self.thread != threading.current_thread():
-          self.thread.join(timeout=1)
-
-       self.thread = None
-       self.paused = True
-       return True
-
-    def physicsLoop(self):
-       while self.running:
-          if not self.paused:
-             self.simulation.update()
-             self.tick += 1
-             if self.tick % 60 == 0:
-                self.tick = 0
-                if (self.sse.write(self.simulation.getSnapshot()) == False):
-                   self.destroyPhysicsLoop()
-          time.sleep(0.016)
+       self.process.terminate()
+       self.process.join()
 
     def startPhysicsLoop(self):
-       self.paused = False
-       self.simulation.simulation.add("solar system")
+       if not self.process: return False
+       self.process.start()
+       while True:
+          if self.sse and not self.queue.empty():
+             data = self.queue.get()
+             try:
+                self.sse.write(data)
+             except Exception as e:
+                self.destroyPhysicsLoop()
+                break;
+
+       #send add through a pipe
 
     def pausePhysicsLoop(self):
-       self.paused = True
-    # PHYSICS LOOP
+       pass
+       #send pause through a pipe
 
-    # SSE
     def connectSSE(self, handler):
-       self.sse = SSE(handler);
+       self.sse = SSE(handler)
+       self.sse.write({"type": "connected"})
 
     def disconnectSSE(self):
        print(f"called disconnect SSE")
        self.sse.close()
-    # SSE
