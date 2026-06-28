@@ -2,4 +2,12 @@
 
 MAIN="py/main.py"
 
-nix-shell --run "python ${MAIN}"
+nix-shell --run '
+source .venv/bin/activate
+
+if ! python -c "import rebound" 2>/dev/null; then
+  pip install -r requirements.txt
+fi
+
+python '"$MAIN"'
+'
