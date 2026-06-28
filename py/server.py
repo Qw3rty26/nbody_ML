@@ -20,18 +20,18 @@ GET_ROUTES = {
    "/JS/script.js":                    lambda: dispatcher.js("script.js"),
    "/JS/mouseActions.js":              lambda: dispatcher.js("mouseActions.js"),
 
-   "/networking/disconnectSSE":        lambda: dispatcher.disconnectSSE(),
+   "/networking/disconnectSSE":        lambda: dispatcher.disconnect_sse(),
 
-   "/simulation/createPhysicsLoop":    lambda: dispatcher.createPhysicsLoop(),
-   "/simulation/destroyPhysicsLoop":   lambda: dispatcher.destroyPhysicsLoop(),
-   "/simulation/startPhysicsLoop":     lambda: dispatcher.startPhysicsLoop(),
-   "/simulation/pausePhysicsLoop":     lambda: dispatcher.pausePhysicsLoop(),
-   "/simulation/clearSystem":          lambda: dispatcher.clearSystem(),
+   "/simulation/createPhysicsLoop":    lambda: dispatcher.create_physics_loop(),
+   "/simulation/destroyPhysicsLoop":   lambda: dispatcher.destroy_physics_loop(),
+   "/simulation/startPhysicsLoop":     lambda: dispatcher.start_physics_loop(),
+   "/simulation/pausePhysicsLoop":     lambda: dispatcher.pause_physics_loop(),
+   "/simulation/clearSystem":          lambda: dispatcher.clear_system(),
 }
 
 POST_ROUTES = {
-   "/simulation/addEntity":            lambda data: dispatcher.addEntity(data),
-   "/simulation/removeEntity":         lambda data: dispatcher.removeEntity(data)
+   "/simulation/addEntity":            lambda data: dispatcher.add_entity(data),
+   "/simulation/removeEntity":         lambda data: dispatcher.remove_entity(data)
 }
 
 
@@ -57,7 +57,7 @@ class catcher(BaseHTTPRequestHandler):
                 return
         elif self.path == "/networking/connectSSE":  #establish an SSE connection to constantly stream entity data to client-side
                 self._set_headers_SSE()
-                dispatcher.connectSSE(self)
+                dispatcher.connect_sse(self)
                 return
         elif self.path in GET_ROUTES:
             result, content_type = GET_ROUTES[self.path]()
@@ -106,7 +106,7 @@ try:
    server.serve_forever()
 except KeyboardInterrupt:
    print("Shutting down...")
-   dispatcher.system.destroyPhysicsLoop()
-   dispatcher.system.disconnectSSE()
+   dispatcher.system.destroy_physics_loop()
+   dispatcher.system.disconnect_sse()
    server.shutdown()
    server.server_close()

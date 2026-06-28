@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-MAIN="py/main.py"
+MAIN="py/server.py"
 
 nix-shell --run '
 source .venv/bin/activate

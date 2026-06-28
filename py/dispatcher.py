@@ -5,44 +5,44 @@ system = System()
 base_path = __file__.rsplit("/", 2)[0] #get the base path of application
 
 
-def createPhysicsLoop():
-        system.createPhysicsLoop()
+def create_physics_loop():
+        system.create_physics_loop()
         return {}, "application/json"
 
-def destroyPhysicsLoop():
-        system.destroyPhysicsLoop()
+def destroy_physics_loop():
+        system.destroy_physics_loop()
         return {}, "application/json"
 
-def startPhysicsLoop():
-        system.startPhysicsLoop()
+def start_physics_loop():
+        system.start_physics_loop()
         return {}, "application/json"
 
-def pausePhysicsLoop():
-        system.pausePhysicsLoop()
+def pause_physics_loop():
+        system.pause_physics_loop()
         return {}, "application/json"
 
-def connectSSE(handler): #establish an SSE connection to constantly stream data to client-side whenever it is ready
-        system.connectSSE(handler)
+def connect_sse(handler): #establish an SSE connection to constantly stream data to client-side whenever it is ready
+        system.connect_sse(handler)
         return {}, "application/json"
 
-def disconnectSSE():
-        system.disconnectSSE()
+def disconnect_sse():
+        system.disconnect_sse()
         return {}, "application/json"
 
-def addEntity(data):
-	system.simulation.addEntity(data["xPos"], data["yPos"], data["zPos"], data["xVel"], data["yVel"], data["zVel"], data["mass"])
+def add_entity(data):
+	system.simulation.add_entity(data["xPos"], data["yPos"], data["zPos"], data["xVel"], data["yVel"], data["zVel"], data["mass"])
 	return {}, "application/json"
 
-def removeEntity(data):
-	system.simulation.removeEntity(data["id"])
+def remove_entity(data):
+	system.simulation.remove_entity(data["id"])
 	return {}, "application/json"
 
-def clearSystem():
+def clear_system():
         system.simulation.clear()
         return {}, "application/json"
 
-def setTimestep(data):
-        system.setTimestep(data["timestep"])
+def set_timestep(data):
+        system.set_timestep(data["timestep"])
         return {}, "application/json"
 
 def html(filename): #returns an html file

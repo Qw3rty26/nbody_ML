@@ -1,6 +1,6 @@
 from sse import SSE
 from multiprocessing import Process, Queue
-from simulation import physicsLoop
+from simulation import physics_loop
 import time
 
 class System:
@@ -9,17 +9,17 @@ class System:
        self.process = None
        self.queue = Queue()
 
-    def createPhysicsLoop(self):
-       self.process = Process(target = physicsLoop, args = (self.queue,))
+    def create_physics_loop(self):
+       self.process = Process(target = physics_loop, args = (self.queue,))
 
-    def destroyPhysicsLoop(self):
+    def destroy_physics_loop(self):
        if self.process is None:
           raise RuntimeError("Physics process not created")
 
        self.process.terminate()
        self.process.join()
 
-    def startPhysicsLoop(self):
+    def start_physics_loop(self):
        if not self.process: return False
        self.process.start()
        while True:
@@ -33,14 +33,14 @@ class System:
 
        #send add through a pipe
 
-    def pausePhysicsLoop(self):
+    def pause_physics_loop(self):
        pass
        #send pause through a pipe
 
-    def connectSSE(self, handler):
+    def connect_sse(self, handler):
        self.sse = SSE(handler)
        self.sse.write({"type": "connected"})
 
-    def disconnectSSE(self):
+    def disconnect_sse(self):
        print(f"called disconnect SSE")
        self.sse.close()
