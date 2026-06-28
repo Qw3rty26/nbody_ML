@@ -28,7 +28,7 @@ class System:
              try:
                 self.sse.write(data)
              except Exception as e:
-                self.destroyPhysicsLoop()
+                self.destroy_physics_loop()
                 break;
 
        #send add through a pipe
