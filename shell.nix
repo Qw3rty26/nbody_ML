@@ -3,5 +3,16 @@
 pkgs.mkShell {
   buildInputs = [
     pkgs.python3
+    pkgs.python3Packages.pip
+
+    pkgs.gcc-unwrapped
+    pkgs.stdenv.cc.cc.lib
+
+    pkgs.openblas
+    pkgs.lapack
   ];
+
+  shellHook = ''
+    export LD_LIBRARY_PATH=${pkgs.gcc-unwrapped.lib}/lib:${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
+  '';
 }

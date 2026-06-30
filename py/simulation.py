@@ -1,20 +1,29 @@
 import time
 import json
 import rebound
+from plummer import Plummer
 
 def physics_loop(queue):
-    from simulation import Simulation
-    import time
 
+    NUMBER_OF_STARS = 200
+    RADIUS = 5
     SLEEP_TIME = 0.016
 
-    solarSystem = Simulation()
-    solarSystem.simulation.add("solar system")
+    plummer = Plummer(RADIUS, NUMBER_OF_STARS)
+
+    positions, velocities = plummer.generate_plummer_cluster()
+
+    from simulation import Simulation
+
+    sim = Simulation()
+
+    for x, v in zip(positions, velocities):
+        sim.add_entity(x[0],x[1],x[2],v[0],v[1],v[2], 1.0)
 
     while True:
-       solarSystem.update()
-       queue.put(solarSystem.get_snapshot())
-       time.sleep(SLEEP_TIME)
+        sim.update()
+        queue.put(sim.get_snapshot())
+        time.sleep(SLEEP_TIME)
 
 class Simulation:
     def __init__(self):
