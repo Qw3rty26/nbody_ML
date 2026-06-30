@@ -5,8 +5,9 @@ from plummer import Plummer
 
 def physics_loop(queue):
 
-    NUMBER_OF_STARS = 200
-    RADIUS = 5
+    NUMBER_OF_STARS = 100
+    RADIUS = 2
+    STAR_MASS = 1.0 / NUMBER_OF_STARS
     SLEEP_TIME = 0.016
 
     plummer = Plummer(RADIUS, NUMBER_OF_STARS)
@@ -18,7 +19,7 @@ def physics_loop(queue):
     sim = Simulation()
 
     for x, v in zip(positions, velocities):
-        sim.add_entity(x[0],x[1],x[2],v[0],v[1],v[2], 1.0)
+        sim.add_entity(x[0],x[1],x[2],v[0],v[1],v[2], STAR_MASS)
 
     while True:
         sim.update()
@@ -31,7 +32,7 @@ class Simulation:
         self.simulation.integrator = "whfast"
         self.simulation.G = 1.0
         self.simulation.t = 0
-        self.timeWarp = 20
+        self.time_warp = 20
         self.simulation.dt = 1e-4
         self.simulation.softening = 0.01
 
@@ -39,9 +40,8 @@ class Simulation:
        if len(self.simulation.particles) < 1:
           return
 
-       for _ in range(self.timeWarp):
+       for _ in range(self.time_warp):
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
-       self.simulation.stop()
 
     def get_snapshot(self):
        snapshot = { # returns a JSON object containing an array of entities' data
