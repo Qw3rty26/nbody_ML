@@ -3,11 +3,13 @@
 MAIN="py/server.py"
 
 nix-shell --run '
-source .venv/bin/activate
-
-if ! python -c "import rebound" 2>/dev/null; then
-  pip install -r requirements.txt
+if [ ! -d .venv ]; then
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install --upgrade pip
+  pip install numpy scipy rebound
 fi
 
+source .venv/bin/activate
 python '"$MAIN"'
 '

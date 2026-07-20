@@ -1,28 +1,16 @@
 import time
 import json
 import rebound
-
-def physics_loop(queue):
-    from simulation import Simulation
-    import time
-
-    SLEEP_TIME = 0.016
-
-    solarSystem = Simulation()
-    solarSystem.simulation.add("solar system")
-
-    while True:
-       solarSystem.update()
-       queue.put(solarSystem.get_snapshot())
-       time.sleep(SLEEP_TIME)
+import numpy as np
 
 class Simulation:
+
     def __init__(self):
         self.simulation = rebound.Simulation()
         self.simulation.integrator = "whfast"
         self.simulation.G = 1.0
         self.simulation.t = 0
-        self.timeWarp = 20
+        self.time_warp = 100
         self.simulation.dt = 1e-4
         self.simulation.softening = 0.01
 
@@ -30,12 +18,16 @@ class Simulation:
        if len(self.simulation.particles) < 1:
           return
 
-       for _ in range(self.timeWarp):
+       for _ in range(self.time_warp):
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
-       self.simulation.stop()
 
     def get_snapshot(self):
+       #com, half_mass_radius = [0,0,0], 10
+       #com, half_mass_radius = self.get_half_mass_radius()
        snapshot = { # returns a JSON object containing an array of entities' data
+          #"half_mass_radius": half_mass_radius,
+          #"center_of_mass": com,
+          "time": self.simulation.t,
           "entities": [{
              "id": i,
              "xPos": p.x,
