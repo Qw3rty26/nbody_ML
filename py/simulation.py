@@ -1,38 +1,16 @@
 import time
 import json
 import rebound
-from plummer import Plummer
-
-def physics_loop(queue):
-
-    NUMBER_OF_STARS = 100
-    RADIUS = 2
-    STAR_MASS = 1.0 / NUMBER_OF_STARS
-    SLEEP_TIME = 0.016
-
-    plummer = Plummer(RADIUS, NUMBER_OF_STARS)
-
-    positions, velocities = plummer.generate_plummer_cluster()
-
-    from simulation import Simulation
-
-    sim = Simulation()
-
-    for x, v in zip(positions, velocities):
-        sim.add_entity(x[0],x[1],x[2],v[0],v[1],v[2], STAR_MASS)
-
-    while True:
-        sim.update()
-        queue.put(sim.get_snapshot())
-        time.sleep(SLEEP_TIME)
+import numpy as np
 
 class Simulation:
+
     def __init__(self):
         self.simulation = rebound.Simulation()
         self.simulation.integrator = "whfast"
         self.simulation.G = 1.0
         self.simulation.t = 0
-        self.time_warp = 20
+        self.time_warp = 100
         self.simulation.dt = 1e-4
         self.simulation.softening = 0.01
 
@@ -44,7 +22,12 @@ class Simulation:
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
 
     def get_snapshot(self):
+       #com, half_mass_radius = [0,0,0], 10
+       #com, half_mass_radius = self.get_half_mass_radius()
        snapshot = { # returns a JSON object containing an array of entities' data
+          #"half_mass_radius": half_mass_radius,
+          #"center_of_mass": com,
+          "time": self.simulation.t,
           "entities": [{
              "id": i,
              "xPos": p.x,

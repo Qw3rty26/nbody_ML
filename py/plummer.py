@@ -8,7 +8,7 @@ CLUSTER_MASS = 1           # M
 class Plummer:
 
    def __init__(self, plummer_radius = 1, number_of_stars = 1):
-      if plummer_radius < 1:
+      if plummer_radius < 0:
          raise ValueError("plummer_radius must be greater than 0")
 
       if number_of_stars < 1:
@@ -25,7 +25,7 @@ class Plummer:
 
       numerator = 3 * CLUSTER_MASS * (self.plummer_radius ** 2)
 
-      denominator = 4 * np.pi * ( (self.plummer_radius ** 2 + radius_from_center**2) ** (5 / 2))
+      denominator = 4 * np.pi * ((self.plummer_radius ** 2 + radius_from_center**2)**(5/2))
 
       rho = numerator / denominator
       return rho
@@ -89,7 +89,7 @@ class Plummer:
 
       numerator = CLUSTER_MASS * radius_from_center**3
 
-      denominator = (self.plummer_radius**2 + radius_from_center**2) ** (3 / 2)
+      denominator = (self.plummer_radius**2 + radius_from_center**2)**(3/2)
 
       mass = numerator / denominator
       return mass
@@ -130,7 +130,7 @@ class Plummer:
 
       #  d_sigma^2_r(r)       d_phi(r)     2 beta(r) * sigma(r)^2     sigma(r)^2     d_rho(r)
       # ---------------- = - ---------- - ------------------------ - ------------ * ----------
-      #        dr               d_r                  r                   rho(r)        d_r
+      #       d_r               d_r                  r                   rho(r)        d_r
 
       derivative = - self._derivative_potential_phi(radius_from_center)
       derivative -= (2 * self._anisotropy_beta(radius_from_center) * sigma_squared) / radius_from_center
