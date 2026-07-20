@@ -1,5 +1,3 @@
-// VELOCITY CHECKBOX
-
 const velocityCheckbox = document.getElementById("velocityCheckbox");
 
 function setVelocityVectors (bool) {
@@ -17,32 +15,25 @@ document.addEventListener("DOMContentLoaded", () =>{
 })
 
 
+const halfmassradiusCheckbox = document.getElementById("halfmassradiusCheckbox");
 
-
-// ACCELERATION CHECKBOX
-
-const accelerationCheckbox = document.getElementById("accelerationCheckbox");
-
-function setAccelerationVectors (bool) {
-	entitySystem.properties.accVector = bool;
+function setHalfMassRadius (bool) {
+        entitySystem.properties.halfMassRadius = bool;
 }
 
-accelerationCheckbox.addEventListener("change", () => {
-	setAccelerationVectors(accelerationCheckbox.checked);
+halfmassradiusCheckbox.addEventListener("change", () => {
+        setHalfMassRadius(halfmassradiusCheckbox.checked);
 });
 
 
-// initiate acceleration vectors
+// initiate velocity vectors
 document.addEventListener("DOMContentLoaded", () =>{
-	setAccelerationVectors(accelerationCheckbox.checked);
+        setHalfMassRadius(halfmassradiusCheckbox.checked);
 })
 
 
 
-
-
-// TIME SLIDER AND TIMESTEP
-
+/*
 const timeSlider = document.getElementById("timeSlider");
 const timeSelector = document.getElementById("timeSelector");
 
@@ -110,3 +101,4 @@ function setFPS (value) {
 document.addEventListener("DOMContentLoaded", () =>{
         setFPS(fpsSlider.value);
 })
+*/
