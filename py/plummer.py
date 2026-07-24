@@ -8,7 +8,7 @@ CLUSTER_MASS = 1           # M
 class Plummer:
 
    def __init__(self, plummer_radius = 1, number_of_stars = 1):
-      if plummer_radius < 0:
+      if plummer_radius <= 0:
          raise ValueError("plummer_radius must be greater than 0")
 
       if number_of_stars < 1:
@@ -115,7 +115,7 @@ class Plummer:
       versor = np.random.normal(size = 3) # generate a random point in 3D space
       norm = np.linalg.norm(versor) # normalise the versor so that its length is 1
       if norm == 0:
-         return versor
+         return self.random_versor()
       else:
          return versor / norm
 

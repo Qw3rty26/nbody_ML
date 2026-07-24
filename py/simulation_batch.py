@@ -2,17 +2,16 @@ from simulation import Simulation
 from plummer import Plummer
 import numpy as np
 import json
+import os
 
 # MAGIC NUMBERS
-NUMBER_OF_STARS = 1024
 RADIUS = 5
-STAR_MASS = 1.0 / NUMBER_OF_STARS
-END_TIME = 10 * RADIUS ** (3 / 2) / np.sqrt(NUMBER_OF_STARS)
 
-def create_simulation(simulation_id):
+def create_simulation(simulation_id, number_of_stars):
    np.random.seed(simulation_id)
+   STAR_MASS = 1.0 / number_of_stars
 
-   plummer = Plummer(RADIUS, NUMBER_OF_STARS)
+   plummer = Plummer(RADIUS, number_of_stars)
    sim = Simulation()
 
    positions, velocities = plummer.generate_plummer_cluster()
@@ -28,10 +27,10 @@ def create_simulation(simulation_id):
 
    return sim
 
-def evolve_cluster(sim):
+def evolve_cluster(sim, end_time):
    next_cleanup = 1.0
 
-   while sim.simulation.t < END_TIME:
+   while sim.simulation.t < end_time:
       sim.update()
 
       if sim.simulation.t >= next_cleanup:
@@ -39,18 +38,21 @@ def evolve_cluster(sim):
          next_cleanup += 1.0
 
 
-def save_cluster(sim, simulation_id):
-   #sim.save_to_file(f"cluster_{simulation_id}.bin")
+def save_cluster(sim, simulation_id, output_path):
+   os.makedirs(output_path, exist_ok=True)
+
+   #sim.save_to_file(f"{output_path}/cluster_{simulation_id}.bin")
    snapshot = sim.get_snapshot()
 
-   with open(f"clusters/cluster_{simulation_id}.txt", "w") as file:
+   with open(f"{output_path}/cluster_{simulation_id}.txt", "w") as file:
       json.dump(snapshot, file, indent=4)
 
-def run(simulation_id = 0):
+def run(simulation_id = 0, number_of_stars = 1, output_path = "default"):
+   sim = create_simulation(simulation_id, number_of_stars)
 
-   sim = create_simulation(simulation_id)
+   END_TIME = 10 * RADIUS ** (3 / 2) / np.sqrt(number_of_stars)
 
-   evolve_cluster(sim)
+   evolve_cluster(sim, END_TIME)
 
-   save_cluster(sim, simulation_id)
+   save_cluster(sim, simulation_id, output_path)
 

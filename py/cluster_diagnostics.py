@@ -56,35 +56,35 @@ class ClusterDiagnostics:
 
        return distances[half_index]
 
-    def get_particle_kinetic_energy(self, particle):
+    def get_entity_kinetic_energy(self, entity):
 
        #                     1
        # kinetic_energy_i = --- m_i v_i^2
        #                     2
 
-       particle_kinetic_energy = 0.5 * particle.m * (
-          particle.vx**2 +
-          particle.vy**2 +
-          particle.vz**2
+       entity_kinetic_energy = 0.5 * entity.m * (
+          entity.vx**2 +
+          entity.vy**2 +
+          entity.vz**2
        )
 
-       return particle_kinetic_energy
+       return entity_kinetic_energy
 
-    def get_particle_potential_energy(self, particle_i):
+    def get_entity_potential_energy(self, entity_i):
 
        #                                        m_i * m_j
        # potential_energy_i = - G * sum_j!=i( -------------)
        #                                       distance_ij
 
-       particle_potential_energy = 0.0
+       entity_potential_energy = 0.0
 
-       for particle_j in self.simulation.particles:
-          if particle_j is particle_i: # j != i
+       for entity_j in self.simulation.particles:
+          if entity_j is entity_i: # j != i
              continue
 
-          distance_x = particle_i.x - particle_j.x
-          distance_y = particle_i.y - particle_j.y
-          distance_z = particle_i.z - particle_j.z
+          distance_x = entity_i.x - entity_j.x
+          distance_y = entity_i.y - entity_j.y
+          distance_z = entity_i.z - entity_j.z
 
           distance = np.sqrt(
              distance_x**2 +
@@ -95,36 +95,39 @@ class ClusterDiagnostics:
           if distance == 0:
              continue
 
-          particle_potential_energy += (
-             particle_i.m *
-             particle_j.m /
+          entity_potential_energy += (
+             entity_i.m *
+             entity_j.m /
              distance
           )
 
-       particle_potential_energy = - self.simulation.G * particle_potential_energy
+       entity_potential_energy = - self.simulation.G * entity_potential_energy
 
-       return particle_potential_energy
+       return entity_potential_energy
 
-    def get_particle_total_energy(self, particle):
+    def get_entity_total_energy(self, entity):
 
        #
        # total_energy_i = kinetic_energy_i + potential_energy_i
        #
 
-       particle_total_energy = self.get_particle_kinetic_energy(particle) + self.get_particle_potential_energy(particle)
+       entity_kinetic_energy = self.get_entity_kinetic_energy(entity)
+       entity_potential_energy = self.get_entity_potential_energy(entity)
 
-       return particle_total_energy
+       entity_total_energy = entity_kinetic_energy + entity_potential_energy
 
-    def get_escaped_particles_ids(self):
-       escaped_particles_ids = []
+       return entity_total_energy
 
-       for id, particle in enumerate(self.simulation.particles):
-          particle_total_energy = self.get_particle_total_energy(particle)
+    def get_escaped_entity_ids(self):
+       escaped_entity_ids = []
 
-          if particle_total_energy > 0:
-             escaped_particles_ids.append(id)
+       for entity_id, entity in enumerate(self.simulation.particles):
+          entity_total_energy = self.get_entity_total_energy(entity)
 
-       return escaped_particles_ids
+          if entity_total_energy > 0:
+             escaped_entity_ids.append(entity_id)
+
+       return escaped_entity_ids
 
     def get_snapshot(self):
        com = self.get_center_of_mass()

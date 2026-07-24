@@ -2,7 +2,7 @@
 
 MAIN="py/launch.py"
 
-nix-shell --run '
+nix-shell --run "
 if [ ! -d .venv ]; then
   python -m venv .venv
   source .venv/bin/activate
@@ -11,5 +11,5 @@ if [ ! -d .venv ]; then
 fi
 
 source .venv/bin/activate
-python '"$MAIN"'
-'
+python $MAIN $*
+"
