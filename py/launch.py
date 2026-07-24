@@ -12,7 +12,7 @@ def main():
     parser.add_argument(
         "--stars",
         type=int,
-        default=1024,
+        default=256,
         help="number of stars"
     )
 
