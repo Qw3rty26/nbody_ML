@@ -66,7 +66,7 @@ class System{
 				if(parsed_data.entities)
 					this.updateSnapshot(ctx, parsed_data);
     			} catch(err) {
-				console.err(err);
+				console.log(err);
     			}
 		}
 		this.sse.onerror = err => console.error(err);
@@ -101,8 +101,13 @@ class System{
    		this.newEntities = parsed.entities.map(e => {
        			return new Entity(e.id, e.xPos, e.yPos, e.zPos, e.xVel, e.yVel, e.zVel, e.mass);
     		});
+                document.getElementById("entitynumber").innerText = this.newEntities.length;
                 document.getElementById("elapsedtime").innerText = parsed.time.toFixed(2);
-		this.lastSnapshotTime = performance.now(); // used to calculate alpha to interpolate the entity
+		document.getElementById("dt_time").innerText = parsed.dt.toExponential(2);
+		document.getElementById("initialenergy").innerText = parsed.initial_energy.toFixed(6);
+                document.getElementById("errorenergy").innerText = parsed.error_energy.toFixed(6);
+                this.properties.setHalfMassRadius(parsed.half_mass_radius, parsed.center_of_mass);
+                this.lastSnapshotTime = performance.now(); // used to calculate alpha to interpolate the entity
 	}
 
 }

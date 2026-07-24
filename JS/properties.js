@@ -21,32 +21,31 @@ class properties{
 		}
 	}
 
-	setHalfMassRadius(radius, center_of_mass){
-		this.halfMassRadius = radius;
-		this.centerOfMass = center_of_mass;
+	setHalfMassRadius(radius, com){
+		this.halfMassRadiusValue = radius;
+                this.centerOfMass = com;
 	}
 
 	renderHalfMassRadius(ctx, space){
-                if(!this.halfMassRadius) return;
-                if(this.halfMassRadiusValue == null) return;
-                if(!this.centerOfMass) return;
-		console.log("halfradius:", this.halfMassRadiusValue, "com:", this.centerOfMass);
+		if(!this.halfMassRadius)	return;
+		if(this.halfMassRadiusValue == null) return;
+    		if(this.centerOfMass == null) 	return;
 
-                const cx = this.centerOfMass.x;
-                const cy = this.centerOfMass.y;
+    		const cx = this.centerOfMass.x;
+    		const cy = this.centerOfMass.y;
 
-                const screen = space.toScreen(cx, cy);
+    		const center = space.toScreen(cx, cy);
 
-                const scale = space.scale || 1;
-                const r = this.halfMassRadiusValue * scale;
+		const edge = space.toScreen(cx + this.halfMassRadiusValue, cy);
+		const r = Math.abs(edge.x - center.x);
 
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 20;
-                ctx.stroke();
-                ctx.restore();
-        }
+    		ctx.save();
+   		ctx.beginPath();
+    		ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+    		ctx.strokeStyle = "red";
+   		ctx.lineWidth = 2;
+    		ctx.stroke();
+    		ctx.restore();
+	}
 
 }
