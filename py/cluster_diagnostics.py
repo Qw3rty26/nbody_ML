@@ -56,6 +56,75 @@ class ClusterDiagnostics:
 
        return distances[half_index]
 
+    def get_particle_kinetic_energy(self, particle):
+
+       #                     1
+       # kinetic_energy_i = --- m_i v_i^2
+       #                     2
+
+       particle_kinetic_energy = 0.5 * particle.m * (
+          particle.vx**2 +
+          particle.vy**2 +
+          particle.vz**2
+       )
+
+       return particle_kinetic_energy
+
+    def get_particle_potential_energy(self, particle_i):
+
+       #                                        m_i * m_j
+       # potential_energy_i = - G * sum_j!=i( -------------)
+       #                                       distance_ij
+
+       particle_potential_energy = 0.0
+
+       for particle_j in self.simulation.particles:
+          if particle_j is particle_i: # j != i
+             continue
+
+          distance_x = particle_i.x - particle_j.x
+          distance_y = particle_i.y - particle_j.y
+          distance_z = particle_i.z - particle_j.z
+
+          distance = np.sqrt(
+             distance_x**2 +
+             distance_y**2 +
+             distance_z**2
+          )
+
+          if distance == 0:
+             continue
+
+          particle_potential_energy += (
+             particle_i.m *
+             particle_j.m /
+             distance
+          )
+
+       particle_potential_energy = - self.simulation.G * particle_potential_energy
+
+       return particle_potential_energy
+
+    def get_particle_total_energy(self, particle):
+
+       #
+       # total_energy_i = kinetic_energy_i + potential_energy_i
+       #
+
+       particle_total_energy = self.get_particle_kinetic_energy(particle) + self.get_particle_potential_energy(particle)
+
+       return particle_total_energy
+
+    def get_escaped_particles_ids(self):
+       escaped_particles_ids = []
+
+       for id, particle in enumerate(self.simulation.particles):
+          particle_total_energy = self.get_particle_total_energy(particle)
+
+          if particle_total_energy > 0:
+             escaped_particles_ids.append(id)
+
+       return escaped_particles_ids
 
     def get_snapshot(self):
        com = self.get_center_of_mass()

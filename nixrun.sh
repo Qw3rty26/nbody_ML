@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-MAIN="py/simulation_batch.py"
+MAIN="py/launch.py"
 
 nix-shell --run '
 if [ ! -d .venv ]; then

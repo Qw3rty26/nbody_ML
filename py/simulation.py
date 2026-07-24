@@ -19,9 +19,6 @@ class Simulation:
         self.simulation.softening = 0
 
     def update(self):
-       if len(self.simulation.particles) < 1:
-          return
-
        for _ in range(self.time_warp):
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
 
@@ -39,7 +36,8 @@ class Simulation:
              "xVel": p.vx,
              "yVel": p.vy,
              "zVel": p.vz,
-             "mass": p.m
+             "mass": p.m,
+             "totalenergy": self.cluster_diagnostics.get_particle_total_energy(p)
           }for i, p in enumerate(self.simulation.particles)]
        }
        return snapshot
@@ -68,4 +66,7 @@ class Simulation:
        self.simulation.remove(id)
 
     def clean_cluster(self):
-       print(f"Cleaning cluster at t={self.simulation.t}")
+       escaped_stars_ids = self.cluster_diagnostics.get_escaped_particles_ids()
+
+       for particle_id in reversed(escaped_stars_ids):
+          self.simulation.remove(particle_id)
