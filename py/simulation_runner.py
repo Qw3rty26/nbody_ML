@@ -15,11 +15,13 @@ def handle_command(command, state):
    elif command == "exit":
       state["is_running"] = False
 
+   elif command == "reset":
+      ...
 
 def run(command_queue, snapshot_queue):
    #print(f"child process is running", flush=True)
-   NUMBER_OF_STARS = 200
-   RADIUS = 2
+   NUMBER_OF_STARS = 512
+   RADIUS = 4
    STAR_MASS = 1.0 / NUMBER_OF_STARS
 
    plummer = Plummer(RADIUS, NUMBER_OF_STARS)
@@ -42,6 +44,8 @@ def run(command_queue, snapshot_queue):
       "is_running": True,
       "is_paused": True
    }
+
+   sim.set_initial_energy()
    snapshot_queue.put(sim.get_snapshot())
 
    while state["is_running"]:

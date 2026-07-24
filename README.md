@@ -1,12 +1,32 @@
 # nbody_ML
-# Simulating the n-body problem with ML
 
-Made by Qw3rty26
+Generate Plummer star clusters using REBOUND.
 
+## Linux
 
-nix-shell
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-exit
+```bash
+./run.sh
+```
+
+## NixOS
+
+```bash
 ./nixrun.sh
+```
+
+Arguments:
+
+```text
+--stars
+--simulations
+--workers
+--output
+```
+
+Example:
+
+```bash
+./run.sh --stars 1024 --simulations 100 --workers 8 --output clusters
+```
+
+## Made by Qw3rty26

@@ -43,6 +43,10 @@ document.getElementById("startSimulationButton").addEventListener("click", () =>
 	entitySystem.command("/simulation/startPhysicsLoop", {});
 });
 
+document.getElementById("pauseSimulationButton").addEventListener("click", () => {
+        entitySystem.command("/simulation/pausePhysicsLoop", {});
+});
+
 document.addEventListener("DOMContentLoaded", () =>{
         entitySystem.space.dragSpace(gridCtx, canvas.width/2, canvas.height/2); // redraw the grid
       	entitySystem.connectSSE(); // establish SSE connection
