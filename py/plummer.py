@@ -242,13 +242,6 @@ class Plummer:
       positions = np.array(positions)
       velocities = np.array(velocities)
 
-      center_of_mass_velocity = np.mean(
-         velocities,
-         axis=0
-      )
-
-      velocities -= center_of_mass_velocity
-
       #self._debug(positions, velocities, radius_vector, sigma_squared_vector)
 
       return positions, velocities

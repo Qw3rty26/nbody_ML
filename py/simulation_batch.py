@@ -28,6 +28,7 @@ def create_simulation(simulation_id, number_of_stars, integrator, dt):
           STAR_MASS
        )
 
+    sim.move_to_center_of_mass()
     sim.cluster_diagnostics.set_initial_total_energy()
 
     return sim

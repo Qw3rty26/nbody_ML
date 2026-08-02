@@ -90,3 +90,7 @@ class Simulation:
           number_of_escaped_entities += 1
 
        return number_of_escaped_entities
+
+
+    def move_to_center_of_mass(self):
+        self.simulation.move_to_com()
