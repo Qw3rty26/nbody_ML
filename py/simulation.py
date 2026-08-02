@@ -21,7 +21,7 @@ class Simulation:
        for _ in range(self.time_warp):
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
 
-    def get_snapshot(self):
+    def get_JSON_snapshot(self):
        diagnostics = self.cluster_diagnostics.get_snapshot()
        snapshot = { # returns a JSON object containing an array of entities' data
           **diagnostics,
@@ -40,6 +40,22 @@ class Simulation:
           }for i, p in enumerate(self.simulation.particles)]
        }
        return snapshot
+
+    def get_XYZV_snapshot(self):
+        snapshot = []
+
+        snapshot.append(len(self.simulation.particles))
+        snapshot.append(
+            f"Plummer star cluster t={self.simulation.t} dt={self.simulation.dt}"
+        )
+
+        for i, p in enumerate(self.simulation.particles):
+            snapshot.append(
+                f"H {p.x} {p.y} {p.z} "
+                f"{p.vx} {p.vy} {p.vz}"
+            )
+
+        return snapshot
 
     def save_to_file(self, file_name):
        if file_name is None:

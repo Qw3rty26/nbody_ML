@@ -50,10 +50,14 @@ def save_cluster(sim, simulation_id, output_path):
     os.makedirs(output_path, exist_ok=True)
 
     #sim.save_to_file(f"{output_path}/cluster_{simulation_id}.bin")
-    snapshot = sim.get_snapshot()
+    #snapshot = sim.get_JSON_snapshot()
+    #with open(f"{output_path}/cluster_{simulation_id}.txt", "w") as file:
+       #json.dump(snapshot, file, indent=4)
 
-    with open(f"{output_path}/cluster_{simulation_id}.txt", "w") as file:
-       json.dump(snapshot, file, indent=4)
+    snapshot = sim.get_XYZV_snapshot()
+    with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
+        for line in snapshot:
+            file.write(f"{line}\n")
 
 def run(simulation_id = 0, number_of_stars = 1, integrator = "leapfrog", dt = 1e-3, output_path = "default"):
     logger.debug(f"Simulation {simulation_id}: Started!")
