@@ -4,7 +4,7 @@ import rebound
 
 class Simulation:
 
-    def initialize_simulation(self, dt = 1e-3, integrator = "whfast"):
+    def initialize_simulation(self, dt = 1e-3, integrator = "leapfrog"):
        self.simulation.t = 0
        self.simulation.G = 1.0
        self.simulation.dt = dt
@@ -12,10 +12,10 @@ class Simulation:
        self.simulation.integrator = integrator
        self.time_warp = 1
 
-    def __init__(self):
+    def __init__(self, dt = 1e-3, integrator = "leapfrog"):
         self.simulation = rebound.Simulation()
         self.cluster_diagnostics = ClusterDiagnostics(self.simulation)
-        self.initialize_simulation()
+        self.initialize_simulation(dt, integrator)
 
     def update(self):
        for _ in range(self.time_warp):
@@ -66,7 +66,11 @@ class Simulation:
        self.simulation.remove(entity_id)
 
     def clean_cluster(self):
+       number_of_escaped_entities = 0
        escaped_entity_ids = self.cluster_diagnostics.get_escaped_entity_ids()
 
        for entity_id in reversed(escaped_entity_ids):
           self.simulation.remove(entity_id)
+          number_of_escaped_entities += 1
+
+       return number_of_escaped_entities
