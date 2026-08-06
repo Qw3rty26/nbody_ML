@@ -33,6 +33,29 @@ def create_simulation(simulation_id, number_of_stars, integrator, dt):
 
     return sim
 
+def save_cluster_with_snapshots(sim, file):
+    snapshot = sim.get_XYZV_snapshot()
+    for line in snapshot:
+        file.write(f"{line}\n")
+
+def evolve_cluster_with_snapshots(sim, end_time, file):
+    next_cleanup = 1.0
+    next_snapshot = 0.01
+    escaped_entities = 0
+
+    while sim.simulation.t < end_time:
+        sim.update()
+
+        if sim.simulation.t >= next_snapshot:
+            save_cluster_with_snapshots(sim, file)
+            next_snapshot += 0.01
+
+        if sim.simulation.t >= next_cleanup:
+            escaped_entities += sim.clean_cluster()
+            next_cleanup += 1.0
+
+    return escaped_entities
+
 def evolve_cluster(sim, end_time):
     next_cleanup = 1.0
     escaped_entities = 0
@@ -65,12 +88,13 @@ def run(simulation_id = 0, number_of_stars = 1, integrator = "leapfrog", dt = 1e
     sim = create_simulation(simulation_id, number_of_stars, integrator, dt)
 
     END_TIME = 10 * RADIUS ** (3 / 2) / np.sqrt(number_of_stars)
-
-
+    os.makedirs(output_path, exist_ok=True)
     logger.debug(f"Simulation {simulation_id}: Evolving cluster...")
-    escaped_entities = evolve_cluster(sim, END_TIME)
+    with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
+        escaped_entities = evolve_cluster_with_snapshots(sim, END_TIME, file)
     logger.info(f"Simulation {simulation_id}: {escaped_entities} Stars removed.")
+    #logger.debug(f"Simulation {simulation_id}: Evolving cluster...")
+    #escaped_entities = evolve_cluster(sim, END_TIME)
+    #logger.info(f"Simulation {simulation_id}: {escaped_entities} Stars removed.")
 
-    logger.debug(f"Simulation {simulation_id}: Saving output in {output_path}/cluster_{simulation_id}.txt")
-    save_cluster(sim, simulation_id, output_path)
-    logger.debug(f"Simulation {simulation_id}: Done!")
+    #save_cluster(sim, simulation_id, output_path)
