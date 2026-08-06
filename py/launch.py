@@ -2,7 +2,7 @@ import argparse
 from multiprocessing import Pool
 from simulation_batch import run
 import logging
-from logger import configure_logging
+from logger_settings import configure_logging
 import time
 
 def run_wrapper(args):
@@ -93,8 +93,7 @@ def main():
     computing_time = time.perf_counter()
     with Pool() as pool:
         for completed, _ in enumerate(pool.imap_unordered(run_wrapper, simulation_args), 1):
-            logger.info(f"Progress: {completed}/{args.simulations} Simulations completed")
-
+            logger.info(f"\033[32mProgress: {completed}/{args.simulations} Simulations completed\033[0m")
     computing_time = time.perf_counter() - computing_time
     logger.info(f"------------------------------------------")
     logger.info(f"         BATCH EXECUTION COMPLETED        ")
