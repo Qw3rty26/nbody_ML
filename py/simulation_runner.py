@@ -45,8 +45,8 @@ def run(command_queue, snapshot_queue):
       "is_paused": True
    }
 
-   sim.set_initial_energy()
-   snapshot_queue.put(sim.get_snapshot())
+   sim.cluster_diagnostics.set_initial_total_energy()
+   snapshot_queue.put(sim.get_JSON_snapshot())
 
    while state["is_running"]:
 
@@ -61,6 +61,6 @@ def run(command_queue, snapshot_queue):
 
       if not state["is_paused"]:
          sim.update()
-         snapshot_queue.put(sim.get_snapshot())
+         snapshot_queue.put(sim.get_JSON_snapshot())
 
-      time.sleep(SLEEP_TIME)
+      #time.sleep(SLEEP_TIME)

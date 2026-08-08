@@ -4,15 +4,15 @@ import rebound
 
 class Simulation:
 
-    def initialize_simulation(self, dt = 1e-3, integrator = "leapfrog"):
+    def initialize_simulation(self, dt = 1e-3, integrator = "whfast"):
        self.simulation.t = 0
        self.simulation.G = 1.0
        self.simulation.dt = dt
        self.simulation.softening = 0
        self.simulation.integrator = integrator
-       self.time_warp = 1
+       self.time_warp = 10
 
-    def __init__(self, dt = 1e-3, integrator = "leapfrog"):
+    def __init__(self, dt = 1e-3, integrator = "whfast"):
         self.simulation = rebound.Simulation()
         self.cluster_diagnostics = ClusterDiagnostics(self.simulation)
         self.initialize_simulation(dt, integrator)
@@ -22,11 +22,12 @@ class Simulation:
           self.simulation.integrate(self.simulation.t + self.simulation.dt)
 
     def get_JSON_snapshot(self):
-       diagnostics = self.cluster_diagnostics.get_snapshot()
+       #diagnostics = self.cluster_diagnostics.get_snapshot()
        snapshot = { # returns a JSON object containing an array of entities' data
-          **diagnostics,
+          #**diagnostics,
           "time": self.simulation.t,
           "dt": self.simulation.dt,
+          "integrator": str(self.simulation.integrator),
           "entities": [{
              "id": i,
              "xPos": p.x,
@@ -35,8 +36,8 @@ class Simulation:
              "xVel": p.vx,
              "yVel": p.vy,
              "zVel": p.vz,
-             "mass": p.m,
-             "totalenergy": self.cluster_diagnostics.get_entity_total_energy(p)
+             "mass": p.m
+             #"totalenergy": self.cluster_diagnostics.get_entity_total_energy(p)
           }for i, p in enumerate(self.simulation.particles)]
        }
        return snapshot

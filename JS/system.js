@@ -104,6 +104,7 @@ class System{
                 document.getElementById("entitynumber").innerText = this.newEntities.length;
                 document.getElementById("elapsedtime").innerText = parsed.time.toFixed(2);
 		document.getElementById("dt_time").innerText = parsed.dt.toExponential(2);
+                document.getElementById("integrator").innerText = parsed.integrator;
 		document.getElementById("initialenergy").innerText = parsed.initial_energy.toFixed(6);
                 document.getElementById("errorenergy").innerText = parsed.error_energy.toFixed(6);
                 this.properties.setHalfMassRadius(parsed.half_mass_radius, parsed.center_of_mass);
