@@ -1,5 +1,6 @@
 from simulation import Simulation
 from plummer import Plummer
+from galactic_potential import GalacticPotential
 import logging
 import numpy as np
 import json
@@ -38,7 +39,7 @@ def save_cluster_with_snapshots(sim, file):
     for line in snapshot:
         file.write(f"{line}\n")
 
-def evolve_cluster_with_snapshots(sim, end_time, file):
+def clean_cluster_with_snapshots(sim, end_time, file):
     next_cleanup = 1.0
     next_snapshot = 0.01
     escaped_entities = 0
@@ -56,7 +57,13 @@ def evolve_cluster_with_snapshots(sim, end_time, file):
 
     return escaped_entities
 
-def evolve_cluster(sim, end_time):
+def evolve_cluster(sim, end_time, file):
+
+    while sim.simulation.t < end_time:
+        sim.update()
+    save_cluster_with_snapshots(sim, file)
+
+def clean_cluster(sim, end_time):
     next_cleanup = 1.0
     escaped_entities = 0
 
@@ -71,19 +78,19 @@ def evolve_cluster(sim, end_time):
 
 
 def save_cluster(sim, simulation_id, output_path):
-    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(output_path+"/JSON", exist_ok=True)
 
     #sim.save_to_file(f"{output_path}/cluster_{simulation_id}.bin")
-    #snapshot = sim.get_JSON_snapshot()
-    #with open(f"{output_path}/cluster_{simulation_id}.txt", "w") as file:
-       #json.dump(snapshot, file, indent=4)
+    snapshot = sim.get_JSON_snapshot()
+    with open(f"{output_path}/JSON/cluster_{simulation_id}.json", "w") as file:
+       json.dump(snapshot, file, indent=4)
 
-    snapshot = sim.get_XYZV_snapshot()
-    with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
-        for line in snapshot:
-            file.write(f"{line}\n")
+    #snapshot = sim.get_XYZV_snapshot()
+    #with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
+    #    for line in snapshot:
+    #        file.write(f"{line}\n")
 
-def run(simulation_id = 0, number_of_stars = 1, integrator = "leapfrog", dt = 1e-3, output_path = "default"):
+def run_gen(simulation_id = 0, number_of_stars = 1, integrator = "whfast", dt = 1e-3, output_path = "default"):
     logger.debug(f"Simulation {simulation_id}: Started!")
     sim = create_simulation(simulation_id, number_of_stars, integrator, dt)
 
@@ -91,10 +98,44 @@ def run(simulation_id = 0, number_of_stars = 1, integrator = "leapfrog", dt = 1e
     os.makedirs(output_path, exist_ok=True)
     logger.debug(f"Simulation {simulation_id}: Evolving cluster...")
     with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
-        escaped_entities = evolve_cluster_with_snapshots(sim, END_TIME, file)
+        escaped_entities = clean_cluster_with_snapshots(sim, END_TIME, file)
+    save_cluster(sim, simulation_id, output_path)
     logger.info(f"Simulation {simulation_id}: {escaped_entities} Stars removed.")
-    #logger.debug(f"Simulation {simulation_id}: Evolving cluster...")
-    #escaped_entities = evolve_cluster(sim, END_TIME)
-    #logger.info(f"Simulation {simulation_id}: {escaped_entities} Stars removed.")
 
-    #save_cluster(sim, simulation_id, output_path)
+
+def run_gts(cluster_file, galaxy_mass=10, galaxy_radius=1, integrator="whfast", dt=1e-3, output_path="default" ):
+    logger.debug(f"Simulation {cluster_file}: Started!")
+
+    with open(cluster_file, "r") as file:
+        snapshot = json.load(file)
+
+    sim = Simulation(
+        dt=snapshot["dt"],
+        integrator=snapshot["integrator"]
+    )
+
+    galactic_potential = GalacticPotential(
+        galaxy_radius,
+        galaxy_mass
+    )
+
+    sim.add_galactic_potential(galactic_potential)
+
+    sim.load_JSON_snapshot(snapshot)
+
+    logger.debug(f"Simulation {cluster_file}: Cluster loaded.")
+
+    END_TIME = 100
+    os.makedirs(output_path, exist_ok=True)
+
+    cluster_name = os.path.splitext(
+         os.path.basename(cluster_file)
+     )[0]
+
+    output_file = os.path.join(
+        output_path,
+        f"{cluster_name}.xyzv"
+    )
+
+    with open(output_file, "w") as file:
+        evolve_cluster(sim, END_TIME, file)

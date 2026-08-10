@@ -42,16 +42,67 @@ class Simulation:
     def add_galactic_potential(self, galactic_potential):
         self.galactic_potential = galactic_potential
         self.simulation.additional_forces = self.add_galaxy_forces_wrapper
-        self.move_cluster(
-            4 * self.galactic_potential.get_galaxy_radius(),
-            0,
-            0
-        )
-        self.speed_cluster(
-            0,
-            self.galactic_potential.get_cluster_initial_velocity(10 * self.galactic_potential.get_galaxy_radius()),
-            0
-        )
+
+    def load_JSON_snapshot(self, snapshot):
+        self.simulation.t = snapshot["time"]
+
+        for entity in snapshot["entities"]:
+            self.add_entity(
+                xPos=entity["xPos"],
+                yPos=entity["yPos"],
+                zPos=entity["zPos"],
+                xVel=entity["xVel"],
+                yVel=entity["yVel"],
+                zVel=entity["zVel"],
+                mass=entity["mass"]
+            )
+            self.move_cluster(
+                4 * self.galactic_potential.get_galaxy_radius(),
+                0,
+                0
+            )
+            self.add_entity(
+                xPos=entity["xPos"],
+                yPos=entity["yPos"],
+                zPos=entity["zPos"],
+                xVel=entity["xVel"],
+                yVel=entity["yVel"],
+                zVel=entity["zVel"],
+                mass=entity["mass"]
+            )
+            self.move_cluster(
+                0,
+                4 * self.galactic_potential.get_galaxy_radius(),
+                0
+            )
+            self.add_entity(
+                xPos=entity["xPos"],
+                yPos=entity["yPos"],
+                zPos=entity["zPos"],
+                xVel=entity["xVel"],
+                yVel=entity["yVel"],
+                zVel=entity["zVel"],
+                mass=entity["mass"]
+            )
+            self.move_cluster(
+                -4 * self.galactic_potential.get_galaxy_radius(),
+                0,
+                0
+            )
+            self.add_entity(
+                xPos=entity["xPos"],
+                yPos=entity["yPos"],
+                zPos=entity["zPos"],
+                xVel=entity["xVel"],
+                yVel=entity["yVel"],
+                zVel=entity["zVel"],
+                mass=entity["mass"]
+            )
+            self.move_cluster(
+                0,
+                -4 * self.galactic_potential.get_galaxy_radius(),
+                0
+            )
 
     def get_JSON_snapshot(self):
         #diagnostics = self.cluster_diagnostics.get_snapshot()
@@ -77,11 +128,25 @@ class Simulation:
     def get_XYZV_snapshot(self):
         snapshot = []
 
-        snapshot.append(len(self.simulation.particles))
-        snapshot.append(
-            f"Plummer star cluster t={self.simulation.t} dt={self.simulation.dt}"
-        )
+        if self.galactic_potential is not None:
+            snapshot.append(len(self.simulation.particles) + 1)
+        else:
+            snapshot.append(len(self.simulation.particles))
 
+        if self.galactic_potential is not None:
+            snapshot.append(
+                f"t={self.simulation.t} dt={self.simulation.dt} M={self.galactic_potential.get_galaxy_mass()} a={self.galactic_potential.get_galaxy_radius()}"
+            )
+        else:
+            snapshot.append(
+                f"Plummer star cluster t={self.simulation.t} dt={self.simulation.dt}"
+            )
+
+        if self.galactic_potential is not None:
+            snapshot.append(
+                f"O 0 0 0 "
+                f"0 0 0"
+        )
         for i, p in enumerate(self.simulation.particles):
             snapshot.append(
                 f"H {p.x} {p.y} {p.z} "

@@ -71,12 +71,11 @@ class GalacticPotential:
         # v = sqrt( ------------------- )
         #            (a^2 + r^2)^(3/2)
 
-        numerator = ( GRAVITATIONAL_CONSTANT * self.plummer_mass * radius**2
-        )
+        numerator = ( GRAVITATIONAL_CONSTANT * self.plummer_mass * radius**2 )
 
         denominator = ( self.plummer_radius**2 + radius**2 )**(3/2)
 
-        velocity = np.sqrt(numerator / denominator)
+        velocity = np.sqrt( numerator / denominator )
         return velocity
 
 
