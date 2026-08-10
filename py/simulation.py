@@ -56,54 +56,11 @@ class Simulation:
                 zVel=entity["zVel"],
                 mass=entity["mass"]
             )
-            self.move_cluster(
-                4 * self.galactic_potential.get_galaxy_radius(),
-                0,
-                0
-            )
-            self.add_entity(
-                xPos=entity["xPos"],
-                yPos=entity["yPos"],
-                zPos=entity["zPos"],
-                xVel=entity["xVel"],
-                yVel=entity["yVel"],
-                zVel=entity["zVel"],
-                mass=entity["mass"]
-            )
-            self.move_cluster(
-                0,
-                4 * self.galactic_potential.get_galaxy_radius(),
-                0
-            )
-            self.add_entity(
-                xPos=entity["xPos"],
-                yPos=entity["yPos"],
-                zPos=entity["zPos"],
-                xVel=entity["xVel"],
-                yVel=entity["yVel"],
-                zVel=entity["zVel"],
-                mass=entity["mass"]
-            )
-            self.move_cluster(
-                -4 * self.galactic_potential.get_galaxy_radius(),
-                0,
-                0
-            )
-            self.add_entity(
-                xPos=entity["xPos"],
-                yPos=entity["yPos"],
-                zPos=entity["zPos"],
-                xVel=entity["xVel"],
-                yVel=entity["yVel"],
-                zVel=entity["zVel"],
-                mass=entity["mass"]
-            )
-            self.move_cluster(
-                0,
-                -4 * self.galactic_potential.get_galaxy_radius(),
-                0
-            )
-
+        self.move_cluster(
+            4 * self.galactic_potential.get_galaxy_radius(),
+            0,
+            0
+        )
     def get_JSON_snapshot(self):
         #diagnostics = self.cluster_diagnostics.get_snapshot()
         snapshot = { # returns a JSON object containing an array of entities' data
