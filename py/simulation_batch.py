@@ -8,134 +8,138 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# MAGIC NUMBERS
-RADIUS = 5
-
-def create_simulation(simulation_id, number_of_stars, integrator, dt):
-    np.random.seed(simulation_id)
+def generate_cluster(cluster_id, cluster_radius, number_of_stars, integrator, dt):
+    np.random.seed(cluster_id)
     STAR_MASS = 1.0 / number_of_stars
 
-    logger.debug(f"Simulation {simulation_id}: Generating Plummer cluster...")
-    plummer = Plummer(RADIUS, number_of_stars)
-    logger.debug(f"Simulation {simulation_id}: Plummer cluster generated.")
-    sim = Simulation(dt, integrator)
-
+    logger.debug(f"Cluster no. {cluster_id}: Generating Plummer Cluster...")
+    plummer = Plummer(cluster_radius, number_of_stars)
     positions, velocities = plummer.generate_plummer_cluster()
 
-    for x, v in zip(positions, velocities):
-       sim.add_entity(
-          x[0], x[1], x[2],
-          v[0], v[1], v[2],
+    simulation = Simulation(dt, integrator)
+
+    for pos, vel in zip(positions, velocities):
+       simulation.add_entity(
+          pos[0], pos[1], pos[2],
+          vel[0], vel[1], vel[2],
           STAR_MASS
        )
 
-    sim.move_to_center_of_mass()
-    sim.cluster_diagnostics.set_initial_total_energy()
+    simulation.move_to_center_of_mass()
+    simulation.cluster_diagnostics.set_initial_total_energy()
 
-    return sim
+    return simulation
 
-def save_cluster_with_snapshots(sim, file):
-    snapshot = sim.get_XYZV_snapshot()
+def save_snapshot_XYZV(simulation, file):
+    snapshot = simulation.get_XYZV_snapshot()
     for line in snapshot:
         file.write(f"{line}\n")
 
-def clean_cluster_with_snapshots(sim, end_time, file):
+def save_snapshot_JSON(simulation, file):
+    snapshot = simulation.get_JSON_snapshot()
+    json.dump(snapshot, file, indent=4)
+
+def clean_cluster(simulation, end_time, xyzv_path):
     next_cleanup = 1.0
     next_snapshot = 0.01
     escaped_entities = 0
 
-    while sim.simulation.t < end_time:
-        sim.update()
+    with open(xyzv_path, "w") as xyzv_file:
+        while simulation.simulation.t < end_time:
+            simulation.update()
 
-        if sim.simulation.t >= next_snapshot:
-            save_cluster_with_snapshots(sim, file)
-            next_snapshot += 0.01
+            if simulation.simulation.t >= next_snapshot:
+                save_snapshot_XYZV(simulation, xyzv_file)
+                next_snapshot += 0.01
 
-        if sim.simulation.t >= next_cleanup:
-            escaped_entities += sim.clean_cluster()
-            next_cleanup += 1.0
+            if simulation.simulation.t >= next_cleanup:
+                escaped_entities += simulation.clean_cluster()
+                next_cleanup += 1.0
 
-    return escaped_entities
+    if escaped_entities != 0:
+        logger.debug(f"Cleaned {escaped_entities} stars.")
 
-def evolve_cluster(sim, end_time, file):
+def evolve_cluster(simulation, end_time):
+    while simulation.simulation.t < end_time:
+        simulation.update()
 
-    while sim.simulation.t < end_time:
-        sim.update()
-    save_cluster_with_snapshots(sim, file)
+def run_cluster_generation(
+    cluster_id = 0,
+    cluster_radius = 1,
+    number_of_stars = 0,
+    integrator = "whfast",
+    dt = 1e-3,
+    output_path = "./clusters"
+):
+        logger.info(f"Cluster no. {cluster_id}: Generating...")
+        simulation = generate_cluster(
+            cluster_id,
+            cluster_radius,
+            number_of_stars,
+            integrator,
+            dt
+        )
 
-def clean_cluster(sim, end_time):
-    next_cleanup = 1.0
-    escaped_entities = 0
+        END_TIME = 10 * cluster_radius ** (3 / 2) / np.sqrt(number_of_stars)
 
-    while sim.simulation.t < end_time:
-       sim.update()
+        os.makedirs(output_path, exist_ok=True)
+        xyzv_path = os.path.join(
+            output_path,
+            f"cluster_{cluster_id}.xyzv"
+        )
 
-       if sim.simulation.t >= next_cleanup:
-          escaped_entities += sim.clean_cluster()
-          next_cleanup += 1.0
-
-    return escaped_entities
-
-
-def save_cluster(sim, simulation_id, output_path):
-    os.makedirs(output_path+"/JSON", exist_ok=True)
-
-    #sim.save_to_file(f"{output_path}/cluster_{simulation_id}.bin")
-    snapshot = sim.get_JSON_snapshot()
-    with open(f"{output_path}/JSON/cluster_{simulation_id}.json", "w") as file:
-       json.dump(snapshot, file, indent=4)
-
-    #snapshot = sim.get_XYZV_snapshot()
-    #with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
-    #    for line in snapshot:
-    #        file.write(f"{line}\n")
-
-def run_gen(simulation_id = 0, number_of_stars = 1, integrator = "whfast", dt = 1e-3, output_path = "default"):
-    logger.debug(f"Simulation {simulation_id}: Started!")
-    sim = create_simulation(simulation_id, number_of_stars, integrator, dt)
-
-    END_TIME = 10 * RADIUS ** (3 / 2) / np.sqrt(number_of_stars)
-    os.makedirs(output_path, exist_ok=True)
-    logger.debug(f"Simulation {simulation_id}: Evolving cluster...")
-    with open(f"{output_path}/cluster_{simulation_id}.xyzv", "w") as file:
-        escaped_entities = clean_cluster_with_snapshots(sim, END_TIME, file)
-    save_cluster(sim, simulation_id, output_path)
-    logger.info(f"Simulation {simulation_id}: {escaped_entities} Stars removed.")
+        json_path = os.path.join(
+            output_path,
+            f"cluster_{cluster_id}.json"
+        )
+        logger.debug(f"Cluster no. {cluster_id}: Cleaning...")
+        clean_cluster(simulation, END_TIME, xyzv_path)
+        with open(json_path, "w") as json_file:
+            save_snapshot_JSON(simulation, json_file)
+        logger.debug(f"Cluster no. {cluster_id}: Done.")
 
 
-def run_gts(cluster_file, galaxy_mass=10, galaxy_radius=1, integrator="whfast", dt=1e-3, output_path="default" ):
-    logger.debug(f"Simulation {cluster_file}: Started!")
+def run_galaxy_tidal_stripping(
+    cluster_file,
+    galaxy_mass=10,
+    galaxy_radius=1,
+    integrator="whfast",
+    dt=1e-3,
+    output_path="./clusters/gts"
+):
+        logger.info(f"Simulation {cluster_file}: Running...")
 
-    with open(cluster_file, "r") as file:
-        snapshot = json.load(file)
+        with open(cluster_file, "r") as json_file:
+            snapshot = json.load(json_file)
 
-    sim = Simulation(
-        dt=snapshot["dt"],
-        integrator=snapshot["integrator"]
-    )
+        simulation = Simulation(
+            dt=snapshot["dt"],
+            integrator=snapshot["integrator"]
+        )
 
-    galactic_potential = GalacticPotential(
-        galaxy_radius,
-        galaxy_mass
-    )
+        galactic_potential = GalacticPotential(galaxy_radius, galaxy_mass)
+        simulation.add_galactic_potential(galactic_potential)
 
-    sim.add_galactic_potential(galactic_potential)
 
-    sim.load_JSON_snapshot(snapshot)
+        logger.debug(f"Simulation {cluster_file}: Loading...")
+        simulation.load_JSON_snapshot(snapshot)
 
-    logger.debug(f"Simulation {cluster_file}: Cluster loaded.")
+        END_TIME = 100
 
-    END_TIME = 100
-    os.makedirs(output_path, exist_ok=True)
+        logger.debug(f"Simulation {cluster_file}: Evolving...")
+        evolve_cluster(simulation, END_TIME)
 
-    cluster_name = os.path.splitext(
-         os.path.basename(cluster_file)
-     )[0]
+        cluster_name = os.path.splitext(
+            os.path.basename(cluster_file)
+        )[0]
 
-    output_file = os.path.join(
-        output_path,
-        f"{cluster_name}.xyzv"
-    )
+        os.makedirs(output_path, exist_ok=True)
+        output_file = os.path.join(
+            output_path,
+            f"{cluster_name}.xyzv"
+        )
 
-    with open(output_file, "w") as file:
-        evolve_cluster(sim, END_TIME, file)
+        with open(output_file, "w") as xyzv_file:
+            save_snapshot_XYZV(simulation, xyzv_file)
+
+        logger.debug(f"Simulation {cluster_file}: Done.")

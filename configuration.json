@@ -1,0 +1,11 @@
+{
+    "stars": 256,
+    "cluster_radius": 10,
+    "galaxy_mass": 10,
+    "galaxy_radius": 2,
+    "simulations": 1,
+    "integrator": "whfast",
+    "dt": 0.001,
+    "output": "./clusters",
+    "input": "./clusters/gts"
+}
