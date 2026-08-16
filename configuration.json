@@ -1,11 +1,34 @@
 {
-    "stars": 256,
-    "cluster_radius": 10,
-    "galaxy_mass": 10,
-    "galaxy_radius": 2,
-    "simulations": 1,
-    "integrator": "whfast",
-    "dt": 0.001,
-    "output": "./clusters",
-    "input": "./clusters/gts"
+    "Simulation": {
+        "dt": 0.001,
+        "integrator": "whfast",
+        "G": 1.0,
+        "softening": 0.0,
+        "time_warp": 100
+    },
+
+    "Cluster Generation": {
+        "stars": 256,
+        "cluster_radius": 5,
+        "starting_time": 0.0
+    },
+
+    "Galactic Tidal Stripping": {
+        "galaxy_mass": 20,
+        "galaxy_radius": 3,
+        "end_time": 100.0
+    },
+
+    "Experiment": {
+        "parameter": "cluster_radius",
+        "values": [2, 3, 4, 5, 6, 7, 8],
+        "simulations_per_value": 4
+    },
+
+    "Output": {
+        "cluster_json": "./clusters/JSON",
+        "cluster_xyzv": "./clusters/XYZV",
+        "gts_xyzv": "./clusters/GTS",
+        "results": "./results"
+    }
 }
