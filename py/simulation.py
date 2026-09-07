@@ -73,6 +73,11 @@ class Simulation:
                 0,
                 0
             )
+            self.speed_cluster(
+                0,
+                self.galactic_potential.get_cluster_initial_velocity(4 * self.galactic_potential.get_galaxy_radius()),
+                0
+            )
 
     def get_JSON_snapshot(self):
         snapshot = {

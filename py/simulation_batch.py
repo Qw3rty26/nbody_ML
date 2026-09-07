@@ -78,8 +78,12 @@ def clean_cluster(simulation, end_time, xyzv_path):
                 next_cleanup += 1.0
 
 
-def evolve_cluster(simulation, end_time):
+def evolve_cluster(simulation, end_time, xyzv_file):
+    next_snapshot = 0.1
     while simulation.simulation.t < end_time:
+        if simulation.simulation.t >= next_snapshot:
+            save_snapshot_XYZV(simulation, xyzv_file)
+            next_snapshot += 0.1
         simulation.update()
 
 
@@ -178,10 +182,6 @@ def run_galaxy_tidal_stripping(
     simulation.load_JSON_snapshot(snapshot)
 
     logger.debug(f"Simulation {cluster_file}: Evolving...")
-    evolve_cluster(
-        simulation,
-        end_time
-    )
 
     cluster_name = os.path.splitext(
         os.path.basename(cluster_file)
@@ -195,8 +195,9 @@ def run_galaxy_tidal_stripping(
     )
 
     with open(output_file, "w") as xyzv_file:
-        save_snapshot_XYZV(
+        evolve_cluster(
             simulation,
+            end_time,
             xyzv_file
         )
 
