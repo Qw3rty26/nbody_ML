@@ -8,9 +8,65 @@ class ClusterDiagnostics:
 
         self.simulation = simulation
         self.initial_total_energy = None
+        self.orbital_angle = self.get_cluster_orbital_angle()
+        self.total_rotation = 0
+        self.orbits = 0
 
     def get_center_of_mass(self):
        return self.simulation.com()
+
+    def get_cluster_orbits(self):
+        return self.orbits
+
+    def get_cluster_orbital_angle(self):
+        center_of_mass = self.get_center_of_mass()
+
+        numerator = 180 * np.arctan2(center_of_mass.y, center_of_mass.x)
+
+        denominator = np.pi
+
+        orbital_angle = numerator / denominator
+
+        return orbital_angle
+
+    def update_orbital_angle(self):
+        # assuming center of galaxy is at (0, 0, 0)
+        new_angle = self.get_cluster_orbital_angle()
+
+        center_of_mass = self.get_center_of_mass()
+
+        radius = np.sqrt(
+            center_of_mass.x**2 +
+            center_of_mass.y**2 +
+            center_of_mass.z**2
+        )
+
+        rotation = new_angle - self.orbital_angle
+
+        if rotation < -180:
+            rotation += 360
+        elif rotation > 180:
+            rotation -= 360
+
+        self.total_rotation += abs(rotation)
+
+        #print(
+        #    f"angle={new_angle:.3f}, "
+        #    f"r={radius:.3f}, "
+        #    f"rotation={rotation:.3f}, "
+        #    f"total={self.total_rotation:.3f}"
+        #)
+
+        if abs(self.total_rotation) >= 360:
+            self.orbits += 1
+
+            if self.total_rotation >= 360:
+                self.total_rotation -= 360
+            else:
+                self.total_rotation += 360
+
+        self.orbital_angle = new_angle
+
 
     def set_initial_total_energy(self):
        self.initial_total_energy = self.simulation.energy()
@@ -105,7 +161,7 @@ class ClusterDiagnostics:
 
        return entity_potential_energy
 
-    def get_entity_total_energy(self, entity):
+    def get_entity_total_energy(self, entity, galactic_potential):
 
        #
        # total_energy_i = kinetic_energy_i + potential_energy_i
@@ -113,16 +169,26 @@ class ClusterDiagnostics:
 
        entity_kinetic_energy = self.get_entity_kinetic_energy(entity)
        entity_potential_energy = self.get_entity_potential_energy(entity)
+       if galactic_potential is not None:
+           radius = np.sqrt(
+               entity.x**2 +
+               entity.y**2 +
+               entity.z**2
+           )
+
+           entity_potential_energy += (
+               entity.m * galactic_potential._potential_phi(radius)
+           )
 
        entity_total_energy = entity_kinetic_energy + entity_potential_energy
 
        return entity_total_energy
 
-    def get_escaped_entity_ids(self):
+    def get_escaped_entity_ids(self, galactic_potential = None):
        escaped_entity_ids = []
 
        for entity_id, entity in enumerate(self.simulation.particles):
-          entity_total_energy = self.get_entity_total_energy(entity)
+          entity_total_energy = self.get_entity_total_energy(entity, galactic_potential)
 
           if entity_total_energy > 0:
              escaped_entity_ids.append(entity_id)

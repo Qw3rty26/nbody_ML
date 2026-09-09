@@ -79,7 +79,7 @@ def _simulate_gts(logger, configuration, simulation_args):
     logger.info(f"  DT: {simulation['dt']}")
     logger.info(f"  GALAXY MASS: {gts['galaxy_mass']}")
     logger.info(f"  GALAXY RADIUS: {gts['galaxy_radius']}")
-    logger.info(f"  END TIME: {gts['end_time']}")
+    logger.info(f"  NUMBER OF ORBITS: {gts['number_of_orbits']}")
     logger.info(f"  OUTPUT: {output['gts_xyzv']}/")
     logger.info("")
     logger.info("------------------------------------------")
@@ -199,7 +199,7 @@ def main():
             cluster_file,
             gts["galaxy_mass"],
             gts["galaxy_radius"],
-            gts["end_time"],
+            gts["number_of_orbits"],
             output["gts_xyzv"],
         )
         for cluster_file in cluster_files

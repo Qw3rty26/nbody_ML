@@ -23,7 +23,6 @@ class Simulation:
         self.simulation.G = G
         self.simulation.softening = softening
         self.simulation.integrator = integrator
-
         self.time_warp = time_warp
 
     def update(self):
@@ -43,6 +42,7 @@ class Simulation:
             particle.vx += speed_x
             particle.vy += speed_y
             particle.vz += speed_z
+        cm = self.simulation.com()
 
     def add_galaxy_forces_wrapper(self, _):
         self.galactic_potential.add_galaxy_forces(
@@ -55,6 +55,11 @@ class Simulation:
 
     def load_JSON_snapshot(self, snapshot):
         self.simulation.t = snapshot["time"]
+        self.simulation.dt = snapshot["dt"]
+        self.simulation.G = snapshot["G"]
+        self.simulation.softening = snapshot["softening"]
+        self.time_warp = snapshot["time_warp"]
+        self.simulation.integrator = snapshot["integrator"]
 
         for entity in snapshot["entities"]:
             self.add_entity(
@@ -69,13 +74,13 @@ class Simulation:
 
         if self.galactic_potential is not None:
             self.move_cluster(
-                4 * self.galactic_potential.get_galaxy_radius(),
+                2 * self.galactic_potential.get_galaxy_radius(),
                 0,
                 0
             )
             self.speed_cluster(
                 0,
-                self.galactic_potential.get_cluster_initial_velocity(4 * self.galactic_potential.get_galaxy_radius()),
+                self.galactic_potential.get_cluster_initial_velocity(2 * self.galactic_potential.get_galaxy_radius()),
                 0
             )
 
@@ -105,9 +110,9 @@ class Simulation:
         snapshot = []
 
         if self.galactic_potential is not None:
-            snapshot.append(len(self.simulation.particles) + 1)
+            snapshot.append(len(self.simulation.particles) + 2)
         else:
-            snapshot.append(len(self.simulation.particles))
+            snapshot.append(len(self.simulation.particles) + 1)
 
         if self.galactic_potential is not None:
             snapshot.append(
@@ -126,6 +131,12 @@ class Simulation:
                 f"t={self.simulation.t} "
                 f"dt={self.simulation.dt}"
             )
+        com = self.cluster_diagnostics.get_center_of_mass()
+
+        snapshot.append(
+            f"Fe {com.x} {com.y} {com.z} "
+            f"{com.vx} {com.vy} {com.vz} "
+        )
 
         for particle in self.simulation.particles:
             snapshot.append(
@@ -170,7 +181,7 @@ class Simulation:
     def clean_cluster(self):
         number_of_escaped_entities = 0
         escaped_entity_ids = (
-            self.cluster_diagnostics.get_escaped_entity_ids()
+            self.cluster_diagnostics.get_escaped_entity_ids(self.galactic_potential)
         )
 
         for entity_id in reversed(escaped_entity_ids):

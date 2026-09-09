@@ -62,8 +62,8 @@ def save_snapshot_JSON(simulation, file):
 
 
 def clean_cluster(simulation, end_time, xyzv_path):
-    next_cleanup = 1.0
-    next_snapshot = 0.01
+    next_cleanup = simulation.simulation.t + 1.0
+    next_snapshot = simulation.simulation.t + 0.01
 
     with open(xyzv_path, "w") as xyzv_file:
         while simulation.simulation.t < end_time:
@@ -78,13 +78,20 @@ def clean_cluster(simulation, end_time, xyzv_path):
                 next_cleanup += 1.0
 
 
-def evolve_cluster(simulation, end_time, xyzv_file):
-    next_snapshot = 0.1
-    while simulation.simulation.t < end_time:
+def evolve_cluster(cluster_file, simulation, number_of_orbits, xyzv_file):
+    next_snapshot = simulation.simulation.t + 0.1
+    orbits = 0
+    while simulation.cluster_diagnostics.get_cluster_orbits() < number_of_orbits:
         if simulation.simulation.t >= next_snapshot:
             save_snapshot_XYZV(simulation, xyzv_file)
             next_snapshot += 0.1
         simulation.update()
+        simulation.clean_cluster()
+        simulation.cluster_diagnostics.update_orbital_angle()
+        new_orbits = simulation.cluster_diagnostics.get_cluster_orbits()
+        if(orbits != new_orbits):
+            orbits = new_orbits
+            logger.info(f"Cluster no. {cluster_file}: {orbits}/{number_of_orbits} done")
 
 
 def run_cluster_generation(
@@ -152,7 +159,7 @@ def run_galaxy_tidal_stripping(
     cluster_file,
     galaxy_mass=10,
     galaxy_radius=1,
-    end_time=100,
+    number_of_orbits=5,
     output_path="./clusters/GTS"
 ):
     logger.info(f"Simulation {cluster_file}: Running...")
@@ -196,8 +203,9 @@ def run_galaxy_tidal_stripping(
 
     with open(output_file, "w") as xyzv_file:
         evolve_cluster(
+            cluster_file,
             simulation,
-            end_time,
+            number_of_orbits,
             xyzv_file
         )
 

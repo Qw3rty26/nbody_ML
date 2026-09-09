@@ -1,28 +1,28 @@
 {
     "Simulation": {
         "dt": 0.001,
-        "integrator": "whfast",
+        "integrator": "leapfrog",
         "G": 1.0,
-        "softening": 0.0,
-        "time_warp": 100
+        "softening": 0.01,
+        "time_warp": 1
     },
 
     "Cluster Generation": {
-        "stars": 256,
-        "cluster_radius": 5,
+        "stars": 3,
+        "cluster_radius": 2,
         "starting_time": 0.0
     },
 
     "Galactic Tidal Stripping": {
-        "galaxy_mass": 20,
-        "galaxy_radius": 3,
-        "end_time": 100.0
+        "galaxy_mass": 50,
+        "galaxy_radius": 10,
+        "number_of_orbits": 2
     },
 
     "Experiment": {
         "parameter": "cluster_radius",
-        "values": [2, 3, 4, 5, 6, 7, 8],
-        "simulations_per_value": 4
+        "values": [1],
+        "simulations_per_value": 1
     },
 
     "Output": {

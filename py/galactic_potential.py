@@ -89,6 +89,6 @@ class GalacticPotential:
                 )
             )
 
-            particle.ax += acceleration_x
-            particle.ay += acceleration_y
-            particle.az += acceleration_z
+            particle.ax = acceleration_x
+            particle.ay = acceleration_y
+            particle.az = acceleration_z
