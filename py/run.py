@@ -11,35 +11,58 @@ from logger_settings import configure_logging
 
 
 def run_gen_wrapper(args):
+
     return run_gen(*args)
 
 
 def run_gts_wrapper(args):
+
     return run_gts(*args)
 
 
 def load_configuration_JSON(file_path):
+
     with open(file_path, "r") as file:
         return json.load(file)
 
+def create_run_directory(output_path, create_clst, create_gts):
+
+    run_id = 1
+
+    while os.path.exists(os.path.join(output_path, f"run_{run_id:03d}")):
+        run_id += 1
+
+    if create_clst.lower() == "y"  or create_gts.lower() == "y":
+        run_path = os.path.join(output_path, f"run_{run_id:03d}")
+
+    if create_clst.lower() == "y":
+        os.makedirs(os.path.join(run_path, "GEN", "JSON"))
+        os.makedirs(os.path.join(run_path, "GEN", "XYZV"))
+
+    if create_gts.lower() == "y":
+        os.makedirs(os.path.join(run_path, "GTS", "JSON"))
+        os.makedirs(os.path.join(run_path, "GTS", "XYZV"))
+
+    return run_path
+
 
 def _generate_clusters(logger, configuration, simulation_args):
-    simulation = configuration["Simulation"]
-    cluster = configuration["Cluster Generation"]
-    output = configuration["Output"]
+
+    simulation = configuration["simulation"]
+    cluster = configuration["cluster generation"]
+    output = configuration["output directory"]
 
     logger.info("------------------------------------------")
     logger.info("           GENERATING CLUSTERS")
     logger.info("")
     logger.info(f"  NO. SIMULATIONS: {len(simulation_args)}")
-    logger.info(f"  STARS: {cluster['stars']}")
-    logger.info(f"  STARTING TIME: {cluster['starting_time']}")
+    logger.info(f"  STARS: {cluster['number_of_stars']}")
     logger.info(f"  DT: {simulation['dt']}")
     logger.info(f"  G: {simulation['G']}")
     logger.info(f"  SOFTENING: {simulation['softening']}")
     logger.info(f"  TIME WARP: {simulation['time_warp']}")
     logger.info(f"  INTEGRATOR: {simulation['integrator']}")
-    logger.info(f"  OUTPUT: {output['cluster_json']}/")
+    logger.info(f"  OUTPUT: {output}/")
     logger.info("")
     logger.info("------------------------------------------")
 
@@ -67,9 +90,10 @@ def _generate_clusters(logger, configuration, simulation_args):
 
 
 def _simulate_gts(logger, configuration, simulation_args):
-    simulation = configuration["Simulation"]
-    gts = configuration["Galactic Tidal Stripping"]
-    output = configuration["Output"]
+
+    simulation = configuration["simulation"]
+    gts = configuration["galactic tidal stripping"]
+    output = configuration["output directory"]
 
     logger.info("------------------------------------------")
     logger.info("            EVOLVING GALAXY")
@@ -80,7 +104,7 @@ def _simulate_gts(logger, configuration, simulation_args):
     logger.info(f"  GALAXY MASS: {gts['galaxy_mass']}")
     logger.info(f"  GALAXY RADIUS: {gts['galaxy_radius']}")
     logger.info(f"  NUMBER OF ORBITS: {gts['number_of_orbits']}")
-    logger.info(f"  OUTPUT: {output['gts_xyzv']}/")
+    logger.info(f"  OUTPUT: {output}/")
     logger.info("")
     logger.info("------------------------------------------")
 
@@ -140,79 +164,73 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    simulation = configuration["Simulation"]
-    cluster = configuration["Cluster Generation"]
-    gts = configuration["Galactic Tidal Stripping"]
-    experiment = configuration["Experiment"]
-    output = configuration["Output"]
+    simulation = configuration["simulation"]
+    cluster = configuration["cluster generation"]
+    gts = configuration["galactic tidal stripping"]
 
-    os.makedirs(output["cluster_json"], exist_ok=True)
-    os.makedirs(output["cluster_xyzv"], exist_ok=True)
-    os.makedirs(output["gts_xyzv"], exist_ok=True)
-    os.makedirs(output["results"], exist_ok=True)
+    simulation_args = []
+    run_path = None
+    cluster_files = None
+    cluster_json = None
+    cluster_xyzv = None
+    gts_json = None
+    gts_xyzv = None
 
-    if experiment["parameter"] == "cluster_radius":
-        simulation_args = []
+    cluster_answer = input("\n\nGenerate new clusters? [Y/N]")
+    gts_answer = input("\n\nSimulate clusters in the galaxy? [Y/N]")
 
-        cluster_id = 0
+    if cluster_answer.lower() == "y":
+        run_path = create_run_directory(configuration["output directory"], cluster_answer, gts_answer)
 
-        for cluster_radius in experiment["values"]:
-            for _ in range(experiment["simulations_per_value"]):
-                simulation_args.append(
-                    (
-                        cluster_id,
-                        cluster_radius,
-                        cluster["stars"],
-                        cluster["starting_time"],
-                        simulation["dt"],
-                        simulation["G"],
-                        simulation["softening"],
-                        simulation["time_warp"],
-                        simulation["integrator"],
-                        output["cluster_json"],
-                    )
+        cluster_json = os.path.join(run_path, "GEN", "JSON")
+        cluster_xyzv = os.path.join(run_path, "GEN", "XYZV")
+
+        for cluster_id in range(cluster["number_of_clusters"]):
+            simulation_args.append(
+                (
+                    cluster_id,
+                    cluster["cluster_radius"],
+                    cluster["number_of_stars"],
+                    simulation["dt"],
+                    simulation["G"],
+                    simulation["softening"],
+                    simulation["time_warp"],
+                    simulation["integrator"],
+                    cluster_json,
+                    cluster_xyzv
                 )
+            )
 
-                cluster_id += 1
+        _generate_clusters(logger, configuration, simulation_args)
     else:
-        raise ValueError(
-            f"Unsupported experiment parameter: {experiment['parameter']}"
-        )
-
-    answer = input("\n\nGenerate new clusters? [Y/N]")
-
-    if answer.lower() == "y":
-        _generate_clusters(
-            logger,
-            configuration,
-            simulation_args
-        )
+        print("can't simulate GTS without generating the cluster first. exiting...")
+        exit()
 
     cluster_files = [
-        os.path.join(output["cluster_json"], file)
-        for file in os.listdir(output["cluster_json"])
+        os.path.join(cluster_json, file)
+        for file in os.listdir(cluster_json)
         if file.endswith(".json")
     ]
 
-    gts_args = [
-        (
-            cluster_file,
-            gts["galaxy_mass"],
-            gts["galaxy_radius"],
-            gts["number_of_orbits"],
-            output["gts_xyzv"],
-        )
-        for cluster_file in cluster_files
-    ]
+    if gts_answer.lower() == "y":
+        if run_path is None:
+            run_path = create_run_directory(configuration["output directory"], cluster_answer, gts_answer)
+        gts_json = os.path.join(run_path, "GTS", "JSON")
+        gts_xyzv = os.path.join(run_path, "GTS", "XYZV")
 
-    answer = input("\n\nSimulate clusters in the galaxy? [Y/N]")
+        gts_args = [
+            (
+                cluster_file,
+                gts["galaxy_mass"],
+                gts["galaxy_radius"],
+                gts["number_of_orbits"],
+                gts_json,
+                gts_xyzv
+            )
+            for cluster_file in cluster_files
+        ]
 
-    if answer.lower() == "y":
-        _simulate_gts(
-            logger,
-            configuration,
-            gts_args
-        )
+        _simulate_gts(logger, configuration, gts_args)
 
 
 if __name__ == "__main__":
