@@ -5,55 +5,53 @@ from cluster_diagnostics import ClusterDiagnostics
 
 class Simulation:
 
-    def __init__(
-        self,
-        dt=1e-3,
-        t=0,
-        G=1.0,
-        softening=0,
-        time_warp=1,
-        integrator="whfast"
-    ):
+    def __init__(self, dt, G, softening, time_warp, integrator):
+
         self.simulation = rebound.Simulation()
-        self.cluster_diagnostics = ClusterDiagnostics(self.simulation)
         self.galactic_potential = None
+        self.cluster_diagnostics = ClusterDiagnostics(self)
 
         self.simulation.dt = dt
-        self.simulation.t = t
+        self.simulation.t = 0
         self.simulation.G = G
         self.simulation.softening = softening
         self.simulation.integrator = integrator
         self.time_warp = time_warp
 
     def update(self):
+
         for _ in range(self.time_warp):
             self.simulation.integrate(
                 self.simulation.t + self.simulation.dt
             )
 
     def move_cluster(self, moved_x, moved_y, moved_z):
+
         for particle in self.simulation.particles:
             particle.x += moved_x
             particle.y += moved_y
             particle.z += moved_z
 
     def speed_cluster(self, speed_x, speed_y, speed_z):
+
         for particle in self.simulation.particles:
             particle.vx += speed_x
             particle.vy += speed_y
             particle.vz += speed_z
-        cm = self.simulation.com()
 
-    def add_galaxy_forces_wrapper(self, _):
+    def _apply_galactic_forces(self, _):
+
         self.galactic_potential.add_galaxy_forces(
             self.simulation.particles
         )
 
     def add_galactic_potential(self, galactic_potential):
+
         self.galactic_potential = galactic_potential
-        self.simulation.additional_forces = self.add_galaxy_forces_wrapper
+        self.simulation.additional_forces = self._apply_galactic_forces
 
     def load_JSON_snapshot(self, snapshot):
+
         self.simulation.t = snapshot["time"]
         self.simulation.dt = snapshot["dt"]
         self.simulation.G = snapshot["G"]
@@ -69,22 +67,12 @@ class Simulation:
                 vx=entity["vx"],
                 vy=entity["vy"],
                 vz=entity["vz"],
-                mass=entity["mass"]
-            )
-
-        if self.galactic_potential is not None:
-            self.move_cluster(
-                2 * self.galactic_potential.get_galaxy_radius(),
-                0,
-                0
-            )
-            self.speed_cluster(
-                0,
-                self.galactic_potential.get_cluster_initial_velocity(2 * self.galactic_potential.get_galaxy_radius()),
-                0
+                mass=entity["mass"],
+                id = entity["id"]
             )
 
     def get_JSON_snapshot(self):
+
         snapshot = {
             "time": self.simulation.t,
             "dt": self.simulation.dt,
@@ -100,13 +88,15 @@ class Simulation:
                 "vx": p.vx,
                 "vy": p.vy,
                 "vz": p.vz,
-                "mass": p.m
+                "mass": p.m,
+                "id": p.name
             } for i, p in enumerate(self.simulation.particles)]
         }
 
         return snapshot
 
     def get_XYZV_snapshot(self):
+
         snapshot = []
 
         if self.galactic_potential is not None:
@@ -116,79 +106,51 @@ class Simulation:
 
         if self.galactic_potential is not None:
             snapshot.append(
+                f"Galactic Tidal Stripped Cluster "
+                f"Properties=species:S:1:id:I:1:pos:R:3:vel:R:3 "
                 f"t={self.simulation.t} "
                 f"dt={self.simulation.dt} "
                 f"M={self.galactic_potential.get_galaxy_mass()} "
-                f"a={self.galactic_potential.get_galaxy_radius()}"
+                f"a={self.galactic_potential.get_galaxy_radius()} "
             )
             snapshot.append(
-                "O 0 0 0 "
+                "O 10000 0 0 0 "
                 "0 0 0"
             )
         else:
             snapshot.append(
-                f"Plummer star cluster "
+                f"Plummer Star Cluster "
+                f"Properties=species:S:1:id:I:1:pos:R:3:vel:R:3 "
                 f"t={self.simulation.t} "
                 f"dt={self.simulation.dt}"
             )
         com = self.cluster_diagnostics.get_center_of_mass()
 
         snapshot.append(
-            f"Fe {com.x} {com.y} {com.z} "
+            f"C 9999 {com.x} {com.y} {com.z} "
             f"{com.vx} {com.vy} {com.vz} "
         )
 
         for particle in self.simulation.particles:
             snapshot.append(
-                f"H {particle.x} {particle.y} {particle.z} "
+                f"H {particle.name} {particle.x} {particle.y} {particle.z} "
                 f"{particle.vx} {particle.vy} {particle.vz}"
             )
 
         return snapshot
 
-    def save_to_file(self, file_name):
-        if file_name is None:
-            raise ValueError("file name cannot be None")
+    def add_entity(self, x=0, y=0, z=0, vx=0, vy=0, vz=0, mass=0.1, id=0):
 
-        self.simulation.save_to_file(file_name)
+        self.simulation.add(x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, m=mass, name=str(id))
 
-    def clear(self):
-        self.__init__()
-
-    def add_entity(
-        self,
-        x=0,
-        y=0,
-        z=0,
-        vx=0,
-        vy=0,
-        vz=0,
-        mass=0.1
-    ):
-        self.simulation.add(
-            m=mass,
-            x=x,
-            y=y,
-            z=z,
-            vx=vx,
-            vy=vy,
-            vz=vz
-        )
 
     def remove_entity(self, entity_id):
+
         self.simulation.remove(entity_id)
 
-    def clean_cluster(self):
-        number_of_escaped_entities = 0
-        escaped_entity_ids = (
-            self.cluster_diagnostics.get_escaped_entity_ids(self.galactic_potential)
-        )
+    def clean_escaped_stars(self, escaped_entity_ids):
 
-        for entity_id in reversed(escaped_entity_ids):
+        for entity_id in escaped_entity_ids:
             self.simulation.remove(entity_id)
-            number_of_escaped_entities += 1
 
-        return number_of_escaped_entities
-
-    def move_to_center_of_mass(self):
-        self.simulation.move_to_com()
+        return len(escaped_entity_ids)

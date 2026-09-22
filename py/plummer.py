@@ -8,6 +8,7 @@ CLUSTER_MASS = 1           # M
 class Plummer:
 
     def __init__(self, plummer_radius = 1, number_of_stars = 1):
+
         if plummer_radius <= 0:
             raise ValueError("plummer_radius must be greater than 0")
 
@@ -36,13 +37,13 @@ class Plummer:
         # y = ---
         #      a
 
-        #  d_rho     -15 * y * (1 + y^2)^(-7/2)
+        #  d_rho     -15 * M * y * (1 + y^2)^(-7/2)
         # ------- = ----------------------------
         #   d_r           4 * pi * a^4
 
         y = radius_from_center / self.plummer_radius
 
-        numerator = - 15 * y * (1 + y**2)**(-7/2)
+        numerator = - 15 * CLUSTER_MASS * y * (1 + y**2)**(-7/2)
 
         denominator = 4 * np.pi * self.plummer_radius**4
 

@@ -8,18 +8,26 @@ import os
 
 logger = logging.getLogger(__name__)
 
+def try_to_clean_stars(simulation_id, simulation):
+    escaped_entity_ids = (
+        simulation.cluster_diagnostics.get_escaped_entity_ids()
+    )
 
-def generate_cluster(
-    cluster_id,
-    cluster_radius,
-    number_of_stars,
-    starting_time,
-    dt,
-    G,
-    softening,
-    time_warp,
-    integrator
-):
+    if escaped_entity_ids:
+
+        relative_error = simulation.cluster_diagnostics.get_total_energy_relative_error_percentage()
+
+        simulation.clean_escaped_stars(escaped_entity_ids)
+
+        simulation.cluster_diagnostics.set_initial_total_energy()
+        new_total_energy = simulation.cluster_diagnostics.get_total_energy()
+
+        logger.debug(f"Simulation {simulation_id}: Cleaning {len(escaped_entity_ids)} star/s Relative error before cleaning: {relative_error:.8f}% New total energy: {new_total_energy:.8f}")
+
+
+
+def generate_cluster(cluster_id, cluster_radius, number_of_stars, dt, G, softening, time_warp, integrator):
+
     np.random.seed(cluster_id)
     STAR_MASS = 1.0 / number_of_stars
 
@@ -28,28 +36,19 @@ def generate_cluster(
     plummer = Plummer(cluster_radius, number_of_stars)
     positions, velocities = plummer.generate_plummer_cluster()
 
-    simulation = Simulation(
-        dt=dt,
-        G=G,
-        softening=softening,
-        time_warp=time_warp,
-        integrator=integrator
-    )
+    simulation = Simulation(dt, G, softening, time_warp, integrator)
 
-    for pos, vel in zip(positions, velocities):
-        simulation.add_entity(
-            pos[0], pos[1], pos[2],
-            vel[0], vel[1], vel[2],
-            STAR_MASS
-        )
+    for id, (pos, vel) in enumerate(zip(positions, velocities)):
+        simulation.add_entity(pos[0], pos[1], pos[2], vel[0], vel[1], vel[2], STAR_MASS, id)
 
-    simulation.move_to_center_of_mass()
+    simulation.simulation.move_to_com()
     simulation.cluster_diagnostics.set_initial_total_energy()
-
+    simulation.cluster_diagnostics.set_initial_angular_momentum()
     return simulation
 
 
 def save_snapshot_XYZV(simulation, file):
+
     snapshot = simulation.get_XYZV_snapshot()
 
     for line in snapshot:
@@ -57,11 +56,13 @@ def save_snapshot_XYZV(simulation, file):
 
 
 def save_snapshot_JSON(simulation, file):
+
     snapshot = simulation.get_JSON_snapshot()
     json.dump(snapshot, file, indent=4)
 
 
-def clean_cluster(simulation, end_time, xyzv_path):
+def clean_cluster(cluster_id, simulation, end_time, xyzv_path):
+
     next_cleanup = simulation.simulation.t + 1.0
     next_snapshot = simulation.simulation.t + 0.01
 
@@ -74,139 +75,137 @@ def clean_cluster(simulation, end_time, xyzv_path):
                 next_snapshot += 0.01
 
             if simulation.simulation.t >= next_cleanup:
-                simulation.clean_cluster()
                 next_cleanup += 1.0
+                try_to_clean_stars(cluster_id, simulation)
 
 
 def evolve_cluster(cluster_file, simulation, number_of_orbits, xyzv_file):
-    next_snapshot = simulation.simulation.t + 0.1
+
+    next_snapshot = simulation.simulation.t + 1.0
     orbits = 0
+
     while simulation.cluster_diagnostics.get_cluster_orbits() < number_of_orbits:
+
         if simulation.simulation.t >= next_snapshot:
             save_snapshot_XYZV(simulation, xyzv_file)
             next_snapshot += 0.1
         simulation.update()
-        simulation.clean_cluster()
+
+        try_to_clean_stars(cluster_file, simulation)
+
         simulation.cluster_diagnostics.update_orbital_angle()
+
         new_orbits = simulation.cluster_diagnostics.get_cluster_orbits()
-        if(orbits != new_orbits):
+
+        if orbits != new_orbits:
             orbits = new_orbits
             logger.info(f"Cluster no. {cluster_file}: {orbits}/{number_of_orbits} done")
 
 
-def run_cluster_generation(
-    cluster_id=0,
-    cluster_radius=1,
-    number_of_stars=0,
-    starting_time=0.0,
-    dt=1e-3,
-    G=1.0,
-    softening=0.0,
-    time_warp=10,
-    integrator="whfast",
-    json_output="./clusters/JSON",
-    xyzv_output="./clusters/XYZV"
-):
+def run_cluster_generation(cluster_id, cluster_radius, number_of_stars, dt, G, softening, time_warp, integrator, json_output_path, xyzv_output_path):
+
     logger.info(f"Cluster no. {cluster_id}: Generating...")
 
-    simulation = generate_cluster(
-        cluster_id,
-        cluster_radius,
-        number_of_stars,
-        starting_time,
-        dt,
-        G,
-        softening,
-        time_warp,
-        integrator
-    )
+    simulation = generate_cluster(cluster_id, cluster_radius, number_of_stars, dt, G, softening, time_warp, integrator)
+    initial_total_energy = simulation.cluster_diagnostics.get_initial_total_energy()
+    initial_angular_momentum = simulation.cluster_diagnostics.get_initial_angular_momentum()
+    logger.debug(f"Cluster no. {cluster_id}:\n"
+                 f"Initial total energy: {initial_total_energy:.7f}\n"
+                 f"Initial angular momentum: {initial_angular_momentum}\n"
+                )
+
 
     END_TIME = (
         10 * cluster_radius ** (3 / 2)
         / np.sqrt(number_of_stars)
     )
 
-    os.makedirs(json_output, exist_ok=True)
-    os.makedirs(xyzv_output, exist_ok=True)
+    os.makedirs(json_output_path, exist_ok=True)
+    os.makedirs(xyzv_output_path, exist_ok=True)
 
-    xyzv_path = os.path.join(
-        xyzv_output,
+    xyzv_output = os.path.join(
+        xyzv_output_path,
         f"cluster_{cluster_id}.xyzv"
     )
 
     json_path = os.path.join(
-        json_output,
+        json_output_path,
         f"cluster_{cluster_id}.json"
     )
 
     logger.debug(f"Cluster no. {cluster_id}: Cleaning...")
-    clean_cluster(
-        simulation,
-        END_TIME,
-        xyzv_path
-    )
+    clean_cluster(cluster_id, simulation, END_TIME, xyzv_output)
 
     with open(json_path, "w") as json_file:
-        save_snapshot_JSON(
-            simulation,
-            json_file
-        )
+        save_snapshot_JSON(simulation, json_file)
+
+    final_total_energy = simulation.cluster_diagnostics.get_total_energy()
+    energy_relative_error = simulation.cluster_diagnostics.get_total_energy_relative_error_percentage()
+    final_angular_momentum = simulation.cluster_diagnostics.get_total_angular_momentum()
+    angular_momentum_relative_error = simulation.cluster_diagnostics.get_total_angular_momentum_error_percentage()
+    logger.debug(f"Cluster no. {cluster_id}:\n"
+                 f"Final cluster total energy: {final_total_energy:.7f} ({energy_relative_error:.7f}% relative error)\n"
+                 f"Final cluster angular momentum: {final_angular_momentum} ({angular_momentum_relative_error:.4f}% relative error)\n"
+                )
+
 
     logger.debug(f"Cluster no. {cluster_id}: Done.")
 
 
-def run_galaxy_tidal_stripping(
-    cluster_file,
-    galaxy_mass=10,
-    galaxy_radius=1,
-    number_of_orbits=5,
-    output_path="./clusters/GTS"
-):
+def run_galaxy_tidal_stripping(cluster_file, galaxy_mass, galaxy_radius, number_of_orbits, json_output_path, xyzv_output_path):
+
     logger.info(f"Simulation {cluster_file}: Running...")
 
     with open(cluster_file, "r") as json_file:
         snapshot = json.load(json_file)
 
     simulation = Simulation(
-        dt=snapshot["dt"],
-        t=snapshot["time"],
-        G=snapshot["G"],
-        softening=snapshot["softening"],
-        time_warp=snapshot["time_warp"],
-        integrator=snapshot["integrator"]
+        dt = snapshot["dt"],
+        G = snapshot["G"],
+        softening = snapshot["softening"],
+        time_warp = snapshot["time_warp"],
+        integrator = snapshot["integrator"]
     )
 
-    galactic_potential = GalacticPotential(
-        galaxy_radius,
-        galaxy_mass
-    )
+    galactic_potential = GalacticPotential(galaxy_radius, galaxy_mass)
 
-    simulation.add_galactic_potential(
-        galactic_potential
-    )
+    orbital_radius = 2 * galaxy_radius
+    orbital_velocity = galactic_potential.get_cluster_initial_velocity(orbital_radius)
+
+    simulation.add_galactic_potential(galactic_potential)
 
     logger.debug(f"Simulation {cluster_file}: Loading...")
     simulation.load_JSON_snapshot(snapshot)
+    simulation.move_cluster(orbital_radius, 0, 0)
+    simulation.speed_cluster(0, orbital_velocity, 0)
+    simulation.cluster_diagnostics.set_initial_total_energy()
+    simulation.cluster_diagnostics.set_initial_angular_momentum()
+
+    initial_total_energy = simulation.cluster_diagnostics.get_initial_total_energy()
+    initial_angular_momentum = simulation.cluster_diagnostics.get_initial_angular_momentum()
+    logger.debug(f"Cluster no. {cluster_file}:\n"
+                 f"Initial total energy: {initial_total_energy:.7f}\n"
+                 f"Initial angular momentum: {initial_angular_momentum}\n"
+                )
 
     logger.debug(f"Simulation {cluster_file}: Evolving...")
 
-    cluster_name = os.path.splitext(
-        os.path.basename(cluster_file)
-    )[0]
+    cluster_name = os.path.splitext(os.path.basename(cluster_file))[0]
 
-    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(xyzv_output_path, exist_ok=True)
 
-    output_file = os.path.join(
-        output_path,
-        f"{cluster_name}.xyzv"
-    )
+    output_file = os.path.join(xyzv_output_path, f"{cluster_name}.xyzv")
 
     with open(output_file, "w") as xyzv_file:
-        evolve_cluster(
-            cluster_file,
-            simulation,
-            number_of_orbits,
-            xyzv_file
-        )
+        evolve_cluster(cluster_file, simulation, number_of_orbits, xyzv_file)
+
+    final_total_energy = simulation.cluster_diagnostics.get_total_energy()
+    energy_relative_error = simulation.cluster_diagnostics.get_total_energy_relative_error_percentage()
+    final_angular_momentum = simulation.cluster_diagnostics.get_total_angular_momentum()
+    angular_momentum_relative_error = simulation.cluster_diagnostics.get_total_angular_momentum_error_percentage()
+    logger.debug(f"Cluster no. {cluster_file}:\n"
+                 f"Final cluster total energy: {final_total_energy:.7f} ({energy_relative_error:.7f}% relative error)\n"
+                 f"Final cluster angular momentum: {final_angular_momentum} ({angular_momentum_relative_error:.4f}% relative error)\n"
+                )
 
     logger.debug(f"Simulation {cluster_file}: Done.")

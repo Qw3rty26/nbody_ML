@@ -1,19 +1,27 @@
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
+
+GRAVITATIONAL_CONSTANT = 1
 
 class ClusterDiagnostics:
 
     def __init__(self, simulation):
+
         if simulation is None:
            raise ValueError("object simulation is None")
 
         self.simulation = simulation
+        self.rebound_simulation = simulation.simulation
         self.initial_total_energy = None
+        self.initial_angular_momentum = None
         self.orbital_angle = self.get_cluster_orbital_angle()
         self.total_rotation = 0
         self.orbits = 0
 
     def get_center_of_mass(self):
-       return self.simulation.com()
+       return self.rebound_simulation.com()
 
     def get_cluster_orbits(self):
         return self.orbits
@@ -30,6 +38,7 @@ class ClusterDiagnostics:
         return orbital_angle
 
     def update_orbital_angle(self):
+
         # assuming center of galaxy is at (0, 0, 0)
         new_angle = self.get_cluster_orbital_angle()
 
@@ -50,13 +59,6 @@ class ClusterDiagnostics:
 
         self.total_rotation += abs(rotation)
 
-        #print(
-        #    f"angle={new_angle:.3f}, "
-        #    f"r={radius:.3f}, "
-        #    f"rotation={rotation:.3f}, "
-        #    f"total={self.total_rotation:.3f}"
-        #)
-
         if abs(self.total_rotation) >= 360:
             self.orbits += 1
 
@@ -67,30 +69,135 @@ class ClusterDiagnostics:
 
         self.orbital_angle = new_angle
 
+    def get_galactic_potential_energy(self):
+
+        #                     G * M_gal * m_i
+        # U_gal = - sum_i ( --------------------- )
+        #                     sqrt(a^2 + r_i^2)
+
+        if self.simulation.galactic_potential is None:
+            return 0.0
+
+        total_potential_energy = 0.0
+
+        for entity in self.rebound_simulation.particles:
+
+            radius_i_squared = (
+                entity.x**2 +
+                entity.y**2 +
+                entity.z**2
+            )
+
+            numerator = GRAVITATIONAL_CONSTANT * self.simulation.galactic_potential.get_galaxy_mass() * entity.m
+
+            denominator = np.sqrt( self.simulation.galactic_potential.get_galaxy_radius()**2 + radius_i_squared )
+
+            total_potential_energy += numerator / denominator
+
+        total_potential_energy *= -1
+
+        return total_potential_energy
+
+
+    def get_total_energy(self):
+
+        #
+        # E = K + U_cluster + U_gal
+        #
+
+        total_energy = self.rebound_simulation.energy()
+
+        total_energy += self.get_galactic_potential_energy()
+
+        return total_energy
 
     def set_initial_total_energy(self):
-       self.initial_total_energy = self.simulation.energy()
+       self.initial_total_energy = self.get_total_energy()
 
     def get_initial_total_energy(self):
        return self.initial_total_energy
 
     def get_total_energy_relative_error(self):
-       if self.initial_total_energy is None:
-          raise ValueError("initial total energy cannot be None")
 
-       current_total_energy = self.simulation.energy()
+        #                                   |E(t) - E_0|
+        # total_energy_relative_error(t) = --------------
+        #                                      |E_0|
 
-       #                      |E(t) - E_0|
-       # relative_error(t) = --------------
-       #                         |E_0|
+        if self.initial_total_energy is None:
+            raise ValueError("Initial total energy cannot be None")
 
-       numerator = abs(current_total_energy - self.initial_total_energy)
+        if self.initial_total_energy == 0:
+            logger.warning("Initial total energy is 0")
+            return 0.0
 
-       denominator = abs(self.initial_total_energy)
+        current_total_energy = self.get_total_energy()
 
-       total_energy_relative_error = numerator / denominator
+        numerator = abs(current_total_energy - self.initial_total_energy)
 
-       return total_energy_relative_error
+        denominator = abs(self.initial_total_energy)
+
+        total_energy_relative_error = numerator / denominator
+
+        return total_energy_relative_error
+
+    def get_total_energy_relative_error_percentage(self):
+        total_energy_relative_error_percentage = self.get_total_energy_relative_error() * 100
+        return total_energy_relative_error_percentage
+
+    def get_total_angular_momentum(self):
+
+        # L_internal = sum((r_i - r_COM) x m_i * (v_i - v_COM))
+
+        center_of_mass = self.rebound_simulation.com()
+
+        total_angular_momentum = np.zeros(3)
+
+        for entity in self.rebound_simulation.particles:
+
+            position = np.array([
+                entity.x - center_of_mass.x,
+                entity.y - center_of_mass.y,
+                entity.z - center_of_mass.z
+            ])
+
+            velocity = np.array([
+                entity.vx - center_of_mass.vx,
+                entity.vy - center_of_mass.vy,
+                entity.vz - center_of_mass.vz
+            ])
+
+            total_angular_momentum += entity.m * np.cross(position, velocity)
+
+        return total_angular_momentum
+
+    def set_initial_angular_momentum(self):
+       self.initial_angular_momentum = self.get_total_angular_momentum()
+
+    def get_initial_angular_momentum(self):
+       return self.initial_angular_momentum
+
+    def get_total_angular_momentum_error(self):
+
+        #                                             |L(t) - L_0|
+        # total_angular_momentum_relative_error(t) = --------------
+        #                                                 |L_0|
+
+        current_total_angular_momentum = self.get_total_angular_momentum()
+
+        numerator = np.linalg.norm(
+            current_total_angular_momentum - self.initial_angular_momentum
+        )
+
+        denominator = np.linalg.norm(self.initial_angular_momentum)
+
+
+        total_angular_momentum_error = numerator / denominator
+
+        return total_angular_momentum_error
+
+    def get_total_angular_momentum_error_percentage(self):
+        total_angular_momentum_error_percentage = self.get_total_angular_momentum_error() * 100
+        return total_angular_momentum_error_percentage
 
     def get_half_mass_radius(self):
 
@@ -98,7 +205,7 @@ class ClusterDiagnostics:
 
        distances = []
 
-       for p in self.simulation.particles:
+       for p in self.rebound_simulation.particles:
           dx = p.x - com.x
           dy = p.y - com.y
           dz = p.z - com.z
@@ -129,12 +236,12 @@ class ClusterDiagnostics:
     def get_entity_potential_energy(self, entity_i):
 
        #                                        m_i * m_j
-       # potential_energy_i = - G * sum_j!=i( -------------)
+       # potential_energy_i = - G * sum_j!=i( ------------- )
        #                                       distance_ij
 
        entity_potential_energy = 0.0
 
-       for entity_j in self.simulation.particles:
+       for entity_j in self.rebound_simulation.particles:
           if entity_j is entity_i: # j != i
              continue
 
@@ -157,11 +264,11 @@ class ClusterDiagnostics:
              distance
           )
 
-       entity_potential_energy = - self.simulation.G * entity_potential_energy
+       entity_potential_energy = - GRAVITATIONAL_CONSTANT * entity_potential_energy
 
        return entity_potential_energy
 
-    def get_entity_total_energy(self, entity, galactic_potential):
+    def get_entity_total_energy(self, entity):
 
        #
        # total_energy_i = kinetic_energy_i + potential_energy_i
@@ -169,7 +276,7 @@ class ClusterDiagnostics:
 
        entity_kinetic_energy = self.get_entity_kinetic_energy(entity)
        entity_potential_energy = self.get_entity_potential_energy(entity)
-       if galactic_potential is not None:
+       if self.simulation.galactic_potential is not None:
            radius = np.sqrt(
                entity.x**2 +
                entity.y**2 +
@@ -177,25 +284,27 @@ class ClusterDiagnostics:
            )
 
            entity_potential_energy += (
-               entity.m * galactic_potential._potential_phi(radius)
+               entity.m * self.simulation.galactic_potential._potential_phi(radius)
            )
 
        entity_total_energy = entity_kinetic_energy + entity_potential_energy
 
        return entity_total_energy
 
-    def get_escaped_entity_ids(self, galactic_potential = None):
+    def get_escaped_entity_ids(self):
+
        escaped_entity_ids = []
 
-       for entity_id, entity in enumerate(self.simulation.particles):
-          entity_total_energy = self.get_entity_total_energy(entity, galactic_potential)
+       for entity in self.rebound_simulation.particles:
+          entity_total_energy = self.get_entity_total_energy(entity)
 
           if entity_total_energy > 0:
-             escaped_entity_ids.append(entity_id)
+             escaped_entity_ids.append(entity.name)
 
        return escaped_entity_ids
 
     def get_snapshot(self):
+
        com = self.get_center_of_mass()
        snapshot = { # returns a JSON object containing an array of cluster diagnostic data
           "initial_energy": self.get_initial_total_energy(),
