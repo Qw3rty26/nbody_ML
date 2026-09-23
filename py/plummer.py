@@ -116,7 +116,7 @@ class Plummer:
         versor = np.random.normal(size = 3) # generate a random point in 3D space
         norm = np.linalg.norm(versor) # normalise the versor so that its length is 1
         if norm == 0:
-            return self.random_versor()
+            return self._random_versor()
         else:
             return versor / norm
 

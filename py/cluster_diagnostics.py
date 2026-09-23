@@ -3,8 +3,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-GRAVITATIONAL_CONSTANT = 1
-
 class ClusterDiagnostics:
 
     def __init__(self, simulation):
@@ -12,16 +10,24 @@ class ClusterDiagnostics:
         if simulation is None:
            raise ValueError("object simulation is None")
 
+        self._cached_half_mass_radius = None
+        self._cached_center_of_mass = None
+
         self.simulation = simulation
         self.rebound_simulation = simulation.simulation
+
         self.initial_total_energy = None
         self.initial_angular_momentum = None
         self.orbital_angle = self.get_cluster_orbital_angle()
+
         self.total_rotation = 0
         self.orbits = 0
 
     def get_center_of_mass(self):
        return self.rebound_simulation.com()
+
+    def _cache_center_of_mass(self):
+        self._cached_center_of_mass = self.get_center_of_mass()
 
     def get_cluster_orbits(self):
         return self.orbits
@@ -41,14 +47,6 @@ class ClusterDiagnostics:
 
         # assuming center of galaxy is at (0, 0, 0)
         new_angle = self.get_cluster_orbital_angle()
-
-        center_of_mass = self.get_center_of_mass()
-
-        radius = np.sqrt(
-            center_of_mass.x**2 +
-            center_of_mass.y**2 +
-            center_of_mass.z**2
-        )
 
         rotation = new_angle - self.orbital_angle
 
@@ -88,7 +86,7 @@ class ClusterDiagnostics:
                 entity.z**2
             )
 
-            numerator = GRAVITATIONAL_CONSTANT * self.simulation.galactic_potential.get_galaxy_mass() * entity.m
+            numerator = self.rebound_simulation.G * self.simulation.galactic_potential.get_galaxy_mass() * entity.m
 
             denominator = np.sqrt( self.simulation.galactic_potential.get_galaxy_radius()**2 + radius_i_squared )
 
@@ -219,16 +217,23 @@ class ClusterDiagnostics:
 
        return distances[half_index]
 
+    def _cache_half_mass_radius(self):
+        self._cached_half_mass_radius = self.get_half_mass_radius()
+
     def get_entity_kinetic_energy(self, entity):
 
        #                     1
        # kinetic_energy_i = --- m_i v_i^2
        #                     2
 
+       v_rel_x = entity.vx - self._cached_center_of_mass.vx
+       v_rel_y = entity.vy - self._cached_center_of_mass.vy
+       v_rel_z = entity.vz - self._cached_center_of_mass.vz
+
        entity_kinetic_energy = 0.5 * entity.m * (
-          entity.vx**2 +
-          entity.vy**2 +
-          entity.vz**2
+          v_rel_x**2 +
+          v_rel_y**2 +
+          v_rel_z**2
        )
 
        return entity_kinetic_energy
@@ -249,22 +254,20 @@ class ClusterDiagnostics:
           distance_y = entity_i.y - entity_j.y
           distance_z = entity_i.z - entity_j.z
 
-          distance = np.sqrt(
+          softened_distance = np.sqrt(
              distance_x**2 +
              distance_y**2 +
-             distance_z**2
+             distance_z**2 +
+             self.rebound_simulation.softening**2
           )
-
-          if distance == 0:
-             continue
 
           entity_potential_energy += (
              entity_i.m *
              entity_j.m /
-             distance
+             softened_distance
           )
 
-       entity_potential_energy = - GRAVITATIONAL_CONSTANT * entity_potential_energy
+       entity_potential_energy = - self.rebound_simulation.G * entity_potential_energy
 
        return entity_potential_energy
 
@@ -276,29 +279,34 @@ class ClusterDiagnostics:
 
        entity_kinetic_energy = self.get_entity_kinetic_energy(entity)
        entity_potential_energy = self.get_entity_potential_energy(entity)
-       if self.simulation.galactic_potential is not None:
-           radius = np.sqrt(
-               entity.x**2 +
-               entity.y**2 +
-               entity.z**2
-           )
-
-           entity_potential_energy += (
-               entity.m * self.simulation.galactic_potential._potential_phi(radius)
-           )
 
        entity_total_energy = entity_kinetic_energy + entity_potential_energy
 
        return entity_total_energy
 
+    def _is_entity_escaped(self, entity, distance_factor = 5.0):
+
+        relative_x = entity.x - self._cached_center_of_mass.x
+        relative_y = entity.y - self._cached_center_of_mass.y
+        relative_z = entity.z - self._cached_center_of_mass.z
+
+        distance_from_com_sq = relative_x**2 + relative_y**2 + relative_z **2
+
+        max_distance_threshold_sq = (distance_factor * self._cached_half_mass_radius)**2
+
+        if distance_from_com_sq < max_distance_threshold_sq:
+            return False
+
+        return self.get_entity_total_energy(entity) > 0
+
     def get_escaped_entity_ids(self):
 
        escaped_entity_ids = []
+       self._cache_center_of_mass()
+       self._cache_half_mass_radius()
 
        for entity in self.rebound_simulation.particles:
-          entity_total_energy = self.get_entity_total_energy(entity)
-
-          if entity_total_energy > 0:
+          if self._is_entity_escaped(entity):
              escaped_entity_ids.append(entity.name)
 
        return escaped_entity_ids

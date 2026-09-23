@@ -81,17 +81,21 @@ def clean_cluster(cluster_id, simulation, end_time, xyzv_path):
 
 def evolve_cluster(cluster_file, simulation, number_of_orbits, xyzv_file):
 
+    next_cleanup = simulation.simulation.t + 1.0
     next_snapshot = simulation.simulation.t + 1.0
     orbits = 0
 
     while simulation.cluster_diagnostics.get_cluster_orbits() < number_of_orbits:
 
+        simulation.update()
+
         if simulation.simulation.t >= next_snapshot:
             save_snapshot_XYZV(simulation, xyzv_file)
             next_snapshot += 0.1
-        simulation.update()
 
-        try_to_clean_stars(cluster_file, simulation)
+        if simulation.simulation.t >= next_cleanup:
+            next_cleanup += 1.0
+            try_to_clean_stars(cluster_file, simulation)
 
         simulation.cluster_diagnostics.update_orbital_angle()
 
@@ -179,13 +183,10 @@ def run_galaxy_tidal_stripping(cluster_file, galaxy_mass, galaxy_radius, number_
     simulation.move_cluster(orbital_radius, 0, 0)
     simulation.speed_cluster(0, orbital_velocity, 0)
     simulation.cluster_diagnostics.set_initial_total_energy()
-    simulation.cluster_diagnostics.set_initial_angular_momentum()
 
     initial_total_energy = simulation.cluster_diagnostics.get_initial_total_energy()
-    initial_angular_momentum = simulation.cluster_diagnostics.get_initial_angular_momentum()
     logger.debug(f"Cluster no. {cluster_file}:\n"
                  f"Initial total energy: {initial_total_energy:.7f}\n"
-                 f"Initial angular momentum: {initial_angular_momentum}\n"
                 )
 
     logger.debug(f"Simulation {cluster_file}: Evolving...")
@@ -201,11 +202,8 @@ def run_galaxy_tidal_stripping(cluster_file, galaxy_mass, galaxy_radius, number_
 
     final_total_energy = simulation.cluster_diagnostics.get_total_energy()
     energy_relative_error = simulation.cluster_diagnostics.get_total_energy_relative_error_percentage()
-    final_angular_momentum = simulation.cluster_diagnostics.get_total_angular_momentum()
-    angular_momentum_relative_error = simulation.cluster_diagnostics.get_total_angular_momentum_error_percentage()
     logger.debug(f"Cluster no. {cluster_file}:\n"
                  f"Final cluster total energy: {final_total_energy:.7f} ({energy_relative_error:.7f}% relative error)\n"
-                 f"Final cluster angular momentum: {final_angular_momentum} ({angular_momentum_relative_error:.4f}% relative error)\n"
                 )
 
     logger.debug(f"Simulation {cluster_file}: Done.")

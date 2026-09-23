@@ -16,13 +16,9 @@ class GalacticPotential:
         self.plummer_mass = plummer_mass # M
 
     def get_galaxy_radius(self):
-        if self.plummer_radius is None:
-            raise ValueError("plummer_radius value is None")
         return self.plummer_radius
 
     def get_galaxy_mass(self):
-        if self.plummer_mass is None:
-            raise ValueError("plummer_mass value is None")
         return self.plummer_mass
 
     def _potential_phi(self, radius_from_center):
@@ -55,7 +51,7 @@ class GalacticPotential:
         numerator = -GRAVITATIONAL_CONSTANT * self.plummer_mass
 
         radius_squared = x**2 + y**2 + z**2
-        denominator = ( self.plummer_radius**2 + radius_squared )**(3/2)
+        denominator = ( self.plummer_radius**2 + radius_squared )**(1.5)
 
         acceleration_factor = numerator / denominator
 
@@ -73,22 +69,26 @@ class GalacticPotential:
 
         numerator = ( GRAVITATIONAL_CONSTANT * self.plummer_mass * radius**2 )
 
-        denominator = ( self.plummer_radius**2 + radius**2 )**(3/2)
+        denominator = ( self.plummer_radius**2 + radius**2 )**(1.5)
 
         velocity = np.sqrt( numerator / denominator )
         return velocity
 
 
     def add_galaxy_forces(self, particles):
-        for particle in particles:
-            acceleration_x, acceleration_y, acceleration_z = (
-                self._acceleration(
-                    particle.x,
-                    particle.y,
-                    particle.z
-                )
-            )
 
-            particle.ax += acceleration_x
-            particle.ay += acceleration_y
-            particle.az += acceleration_z
+        size = len(particles)
+        x = np.empty(size)
+        y = np.empty(size)
+        z = np.empty(size)
+
+        for i, p in enumerate(particles):
+            x[i], y[i], z[i] = p.x, p.y, p.z
+
+        ax, ay, az = self._acceleration(x, y, z)
+
+        for i, particle in enumerate(particles):
+
+            particle.ax += ax[i]
+            particle.ay += ay[i]
+            particle.az += az[i]
